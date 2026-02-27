@@ -15,11 +15,7 @@ public partial class InventoryDbContext : DbContext
     {
     }
 
-    public virtual DbSet<Block> Blocks { get; set; }
-
     public virtual DbSet<Business> Businesses { get; set; }
-
-    public virtual DbSet<Hallway> Hallways { get; set; }
 
     public virtual DbSet<Kardex> Kardices { get; set; }
 
@@ -30,31 +26,10 @@ public partial class InventoryDbContext : DbContext
     public virtual DbSet<Warehouseproduct> Warehouseproducts { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseNpgsql("Host=localhost;Port=5432;Database=inventory_db;Username=postgres;Password=admin");
+        => optionsBuilder.UseNpgsql("Name=ConnectionStrings:DefaultConnection");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Block>(entity =>
-        {
-            entity.HasKey(e => e.Blockid).HasName("block_pkey");
-
-            entity.ToTable("block");
-
-            entity.Property(e => e.Blockid)
-                .UseIdentityAlwaysColumn()
-                .HasColumnName("blockid");
-            entity.Property(e => e.Blockname)
-                .HasMaxLength(20)
-                .HasColumnName("blockname");
-            entity.Property(e => e.Hallwayid).HasColumnName("hallwayid");
-
-            entity.HasOne(d => d.Hallway).WithMany(p => p.Blocks)
-                .HasForeignKey(d => d.Hallwayid)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("fk_hallway");
-        });
-
         modelBuilder.Entity<Business>(entity =>
         {
             entity.HasKey(e => e.Businessid).HasName("business_pkey");
@@ -69,26 +44,6 @@ public partial class InventoryDbContext : DbContext
             entity.Property(e => e.Businessname)
                 .HasMaxLength(50)
                 .HasColumnName("businessname");
-        });
-
-        modelBuilder.Entity<Hallway>(entity =>
-        {
-            entity.HasKey(e => e.Hallwayid).HasName("hallway_pkey");
-
-            entity.ToTable("hallway");
-
-            entity.Property(e => e.Hallwayid)
-                .UseIdentityAlwaysColumn()
-                .HasColumnName("hallwayid");
-            entity.Property(e => e.Hallwayname)
-                .HasMaxLength(20)
-                .HasColumnName("hallwayname");
-            entity.Property(e => e.Warehouseid).HasColumnName("warehouseid");
-
-            entity.HasOne(d => d.Warehouse).WithMany(p => p.Hallways)
-                .HasForeignKey(d => d.Warehouseid)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("fk_warehouse");
         });
 
         modelBuilder.Entity<Kardex>(entity =>
@@ -158,6 +113,9 @@ public partial class InventoryDbContext : DbContext
             entity.Property(e => e.Name)
                 .HasMaxLength(35)
                 .HasColumnName("name");
+            entity.Property(e => e.Sku)
+                .HasMaxLength(35)
+                .HasColumnName("sku");
             entity.Property(e => e.Status).HasColumnName("status");
             entity.Property(e => e.Stockleft).HasColumnName("stockleft");
         });
@@ -190,20 +148,9 @@ public partial class InventoryDbContext : DbContext
                 .HasNoKey()
                 .ToTable("warehouseproduct");
 
-            entity.Property(e => e.Blockid).HasColumnName("blockid");
             entity.Property(e => e.Businessid).HasColumnName("businessid");
             entity.Property(e => e.Productid).HasColumnName("productid");
             entity.Property(e => e.Warehouseid).HasColumnName("warehouseid");
-
-            entity.HasOne(d => d.Block).WithMany()
-                .HasForeignKey(d => d.Blockid)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("fk_prod_block");
-
-            entity.HasOne(d => d.Business).WithMany()
-                .HasForeignKey(d => d.Businessid)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("fk_prod_business");
 
             entity.HasOne(d => d.Product).WithMany()
                 .HasForeignKey(d => d.Productid)

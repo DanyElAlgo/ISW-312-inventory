@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using InventoryAPI.Data;
-using InventoryAPI.Services;
+using InventoryAPI.Models;
 using InventoryAPI.Repositories;
 
 // TODO: Change internal namespace name later
@@ -10,9 +9,6 @@ var builder = WebApplication.CreateBuilder(args);
 // Services
 builder.Services.AddDbContext<InventoryDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-builder.Services.AddScoped<IItemService, ItemService>();
-builder.Services.AddScoped<IItemRepository, ItemRepository>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
