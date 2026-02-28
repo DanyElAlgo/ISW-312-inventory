@@ -3,7 +3,7 @@ using InventoryAPI.Models;
 
 namespace InventoryAPI.Repositories;
 
-public class ProductRepository /*: IItemRepository*/
+public class ProductRepository
 {
     private readonly InventoryDbContext _context;
 
@@ -50,5 +50,36 @@ public class ProductRepository /*: IItemRepository*/
     public async Task<bool> ExistsAsync(int id)
     {
         return await _context.Products.AnyAsync(i => i.Productid == id);
+    }
+
+    public async Task<Kardex> AddKardexEntryAsync(Kardex kardexEntry)
+    {
+        _context.Kardices.Add(kardexEntry);
+        await _context.SaveChangesAsync();
+        return kardexEntry;
+    }
+
+    public async Task<IEnumerable<Kardex>> GetKardexByProductIdAsync(int productId)
+    {
+        return await _context.Kardices
+            .Where(k => k.Productid == productId)
+            .OrderByDescending(k => k.Timestamp)
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<Kardex>> GetKardexByWarehouseAsync(int warehouseId)
+    {
+        return await _context.Kardices
+            .Where(k => k.Warehouseprimaryid == warehouseId)
+            .OrderByDescending(k => k.Timestamp)
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<Kardex>> GetKardexByProductAndWarehouseAsync(int productId, int warehouseId)
+    {
+        return await _context.Kardices
+            .Where(k => k.Productid == productId && k.Warehouseprimaryid == warehouseId)
+            .OrderByDescending(k => k.Timestamp)
+            .ToListAsync();
     }
 }
