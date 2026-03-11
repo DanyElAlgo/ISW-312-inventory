@@ -3,17 +3,13 @@ using System.Collections.Generic;
 
 namespace InventoryAPI.Models;
 
-public partial class Warehouse
+public partial class ProductStatus
 {
     public int Id { get; set; }
 
-    public int? BusinessId { get; set; }
-
     public string? Name { get; set; }
 
-    public virtual Business? Business { get; set; }
-
-    public virtual ICollection<Kardex> Kardices { get; set; } = new List<Kardex>();
+    public string? Description { get; set; }
 
     public virtual ICollection<WarehouseProduct> WarehouseProducts { get; set; } = new List<WarehouseProduct>();
 }

@@ -1,0 +1,27 @@
+﻿using System;
+using System.Collections.Generic;
+
+namespace InventoryAPI.Models;
+
+public partial class OrderItem
+{
+    public int Id { get; set; }
+
+    public double? Qty { get; set; }
+
+    public string? AdditionalNote { get; set; }
+
+    public int? OrderId { get; set; }
+
+    public int? ProductId { get; set; }
+
+    public int? StatusId { get; set; }
+
+    public virtual ICollection<CommandItem> CommandItems { get; set; } = new List<CommandItem>();
+
+    public virtual OrderTicket? Order { get; set; }
+
+    public virtual Product? Product { get; set; }
+
+    public virtual OrderStatus? Status { get; set; }
+}

@@ -1,0 +1,185 @@
+-- =========================
+-- Inventory Module
+-- =========================
+
+CREATE TABLE business (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255)
+);
+
+CREATE TABLE category (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255),
+    description VARCHAR(255)
+);
+
+CREATE TABLE unit (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255),
+    description VARCHAR(255)
+);
+
+CREATE TABLE product_status (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255),
+    description VARCHAR(255)
+);
+
+-- =========================
+
+CREATE TABLE product (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255),
+    description VARCHAR(255),
+    unit_id INT,
+    unit_qty DOUBLE PRECISION,
+    category_id INT,
+
+    FOREIGN KEY (unit_id) REFERENCES unit(id),
+    FOREIGN KEY (category_id) REFERENCES category(id)
+);
+
+CREATE TABLE warehouse (
+    id SERIAL PRIMARY KEY,
+    business_id INT,
+    name VARCHAR(255),
+
+    FOREIGN KEY (business_id) REFERENCES business(id)
+);
+
+CREATE TABLE warehouse_product (
+    id SERIAL PRIMARY KEY,
+    warehouse_id INT,
+    product_id INT,
+    status_id INT,
+    stock_left INT,
+    low_stock_qty INT,
+
+    FOREIGN KEY (status_id) REFERENCES product_status(id),
+    FOREIGN KEY (warehouse_id) REFERENCES warehouse(id),
+    FOREIGN KEY (product_id) REFERENCES product(id)
+);
+
+CREATE TABLE kardex (
+    id SERIAL PRIMARY KEY,
+    warehouse_id INT,
+    product_id INT,
+    action_type VARCHAR(50),
+    action_qty DOUBLE PRECISION,
+    time_stamp TIMESTAMP,
+    reason VARCHAR(255),
+
+    FOREIGN KEY (warehouse_id) REFERENCES warehouse(id),
+    FOREIGN KEY (product_id) REFERENCES product(id)
+);
+
+-- =========================
+-- Sales Module
+-- =========================
+
+CREATE TABLE customer (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255),
+    phone VARCHAR(50)
+);
+
+CREATE TABLE order_status (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255),
+    description VARCHAR(255)
+);
+
+CREATE TABLE payment_type (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255),
+    description VARCHAR(255)
+);
+
+-- =========================
+
+CREATE TABLE order_ticket (
+    id SERIAL PRIMARY KEY,
+    customer_id INT,
+    status_id INT,
+
+    FOREIGN KEY (customer_id) REFERENCES customer(id),
+    FOREIGN KEY (status_id) REFERENCES order_status(id)
+);
+
+CREATE TABLE order_item (
+    id SERIAL PRIMARY KEY,
+    qty DOUBLE PRECISION,
+    additional_note VARCHAR(255),
+    order_id INT,
+    product_id INT,
+    status_id INT,
+
+    FOREIGN KEY (order_id) REFERENCES order_ticket(id),
+    FOREIGN KEY (product_id) REFERENCES product(id),
+    FOREIGN KEY (status_id) REFERENCES order_status(id)
+);
+
+CREATE TABLE payment (
+    id SERIAL PRIMARY KEY,
+    order_id INT,
+    payment_type_id INT,
+    paid_at TIMESTAMP,
+
+    FOREIGN KEY (order_id) REFERENCES order_ticket(id),
+    FOREIGN KEY (payment_type_id) REFERENCES payment_type(id)
+);
+
+-- =========================
+-- POS Submodule
+-- =========================
+
+CREATE TABLE waiter (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255),
+    phone VARCHAR(50)
+);
+
+CREATE TABLE station_type (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255),
+    description VARCHAR(255)
+);
+
+-- =========================
+
+CREATE TABLE order_command (
+    id SERIAL PRIMARY KEY,
+    order_id INT,
+    waiter_id INT,
+
+    FOREIGN KEY (order_id) REFERENCES order_ticket(id),
+    FOREIGN KEY (waiter_id) REFERENCES waiter(id)
+);
+
+CREATE TABLE station (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255),
+    type_id INT,
+
+    FOREIGN KEY (type_id) REFERENCES station_type(id)
+);
+
+CREATE TABLE command_item (
+    id SERIAL PRIMARY KEY
+    order_item_id INT,
+    command_id INT,
+    station_id INT,
+
+    FOREIGN KEY (order_item_id) REFERENCES order_item(id),
+    FOREIGN KEY (station_id) REFERENCES station(id)
+);
+
+CREATE TABLE station_coverage (
+    station_type_id INT,
+    category_id INT,
+
+    PRIMARY KEY (station_type_id, category_id),
+
+    FOREIGN KEY (station_type_id) REFERENCES station_type(id),
+    FOREIGN KEY (category_id) REFERENCES category(id)
+);

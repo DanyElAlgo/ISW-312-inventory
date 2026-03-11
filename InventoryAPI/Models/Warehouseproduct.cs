@@ -3,15 +3,23 @@ using System.Collections.Generic;
 
 namespace InventoryAPI.Models;
 
-public partial class Warehouseproduct
+public partial class WarehouseProduct
 {
-    public int Warehouseid { get; set; }
+    public int Id { get; set; }
 
-    public int Businessid { get; set; }
+    public int? WarehouseId { get; set; }
 
-    public int Productid { get; set; }
+    public int? ProductId { get; set; }
 
-    public virtual Product Product { get; set; } = null!;
+    public int? StatusId { get; set; }
 
-    public virtual Warehouse Warehouse { get; set; } = null!;
+    public int? StockLeft { get; set; }
+
+    public int? LowStockQty { get; set; }
+
+    public virtual Product? Product { get; set; }
+
+    public virtual ProductStatus? Status { get; set; }
+
+    public virtual Warehouse? Warehouse { get; set; }
 }

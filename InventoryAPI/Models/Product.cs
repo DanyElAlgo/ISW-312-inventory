@@ -5,25 +5,25 @@ namespace InventoryAPI.Models;
 
 public partial class Product
 {
-    public int Productid { get; set; }
+    public int Id { get; set; }
 
-    public string Name { get; set; } = null!;
+    public string? Name { get; set; }
 
-    public string Sku { get; set; } = null!;
+    public string? Description { get; set; }
 
-    public string Category { get; set; } = null!;
+    public int? UnitId { get; set; }
 
-    public string Description { get; set; } = null!;
+    public double? UnitQty { get; set; }
 
-    public string Metricunit { get; set; } = null!;
+    public int? CategoryId { get; set; }
 
-    public bool Status { get; set; }
-
-    public int? Batch { get; set; }
-
-    public int Stockleft { get; set; }
-
-    public int? Lowstockqty { get; set; }
+    public virtual Category? Category { get; set; }
 
     public virtual ICollection<Kardex> Kardices { get; set; } = new List<Kardex>();
+
+    public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
+
+    public virtual Unit? Unit { get; set; }
+
+    public virtual ICollection<WarehouseProduct> WarehouseProducts { get; set; } = new List<WarehouseProduct>();
 }
