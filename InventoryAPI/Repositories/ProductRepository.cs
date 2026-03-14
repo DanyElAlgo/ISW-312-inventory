@@ -14,12 +14,18 @@ public class ProductRepository
 
     public async Task<IEnumerable<Product>> GetAllAsync()
     {
-        return await _context.Products.ToListAsync();
+        return await _context.Products
+            .Include(p => p.Category)
+            .Include(p => p.Unit)
+            .ToListAsync();
     }
 
     public async Task<Product?> GetByIdAsync(int id)
     {
-        return await _context.Products.FindAsync(id);
+        return await _context.Products
+            .Include(p => p.Category)
+            .Include(p => p.Unit)
+            .FirstOrDefaultAsync(p => p.Id == id);
     }
 
     public async Task<Product> CreateAsync(Product item)
@@ -49,7 +55,7 @@ public class ProductRepository
 
     public async Task<bool> ExistsAsync(int id)
     {
-        return await _context.Products.AnyAsync(i => i.Productid == id);
+        return await _context.Products.AnyAsync(i => i.Id == id);
     }
 
     public async Task<Kardex> AddKardexEntryAsync(Kardex kardexEntry)
@@ -62,24 +68,25 @@ public class ProductRepository
     public async Task<IEnumerable<Kardex>> GetKardexByProductIdAsync(int productId)
     {
         return await _context.Kardices
-            .Where(k => k.Productid == productId)
-            .OrderByDescending(k => k.Timestamp)
+            .Where(k => k.ProductId == productId)
+            .OrderByDescending(k => k.TimeStamp)
             .ToListAsync();
     }
 
     public async Task<IEnumerable<Kardex>> GetKardexByWarehouseAsync(int warehouseId)
     {
         return await _context.Kardices
-            .Where(k => k.Warehouseprimaryid == warehouseId)
-            .OrderByDescending(k => k.Timestamp)
+            .Where(k => k.WarehouseId == warehouseId)
+            .OrderByDescending(k => k.TimeStamp)
             .ToListAsync();
     }
 
     public async Task<IEnumerable<Kardex>> GetKardexByProductAndWarehouseAsync(int productId, int warehouseId)
     {
         return await _context.Kardices
-            .Where(k => k.Productid == productId && k.Warehouseprimaryid == warehouseId)
-            .OrderByDescending(k => k.Timestamp)
+            .Where(k => k.ProductId == productId && k.WarehouseId == warehouseId)
+            .OrderByDescending(k => k.TimeStamp)
             .ToListAsync();
     }
 }
+

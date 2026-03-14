@@ -9,10 +9,12 @@ namespace InventoryAPI.Controllers;
 public class ProductsController : ControllerBase
 {
     private readonly ProductService _service;
+    private readonly ProductSearchService _searchService;
 
-    public ProductsController(ProductService service)
+    public ProductsController(ProductService service, ProductSearchService searchService)
     {
         _service = service;
+        _searchService = searchService;
     }
 
     [HttpGet]
@@ -39,7 +41,7 @@ public class ProductsController : ControllerBase
             return BadRequest(ModelState);
 
         var product = await _service.CreateProductAsync(dto);
-        return CreatedAtAction(nameof(GetProductById), new { id = product.ProductId }, product);
+        return CreatedAtAction(nameof(GetProductById), new { id = product.Id }, product);
     }
 
     [HttpPut("{id}")]
@@ -70,5 +72,19 @@ public class ProductsController : ControllerBase
     {
         var history = await _service.GetProductHistoryAsync(id);
         return Ok(history);
+    }
+
+    /// <param name="filter">Search filter with optional searchTerm, categoryId, statusId and pagination</param>
+    [HttpPost("search")]
+    public async Task<ActionResult<PaginatedProductSearchDto>> SearchProducts([FromBody] ProductSearchFilterDto filter)
+    {
+        // Validate pagination parameters
+        if (filter.PageNumber < 1)
+            filter.PageNumber = 1;
+        if (filter.PageSize < 1 || filter.PageSize > 100)
+            filter.PageSize = 10;
+
+        var result = await _searchService.SearchProductsAsync(filter);
+        return Ok(result);
     }
 }

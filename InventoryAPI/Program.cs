@@ -14,7 +14,25 @@ builder.Services.AddDbContext<InventoryDbContext>(options =>
 // Register repositories and services
 builder.Services.AddScoped<ProductRepository>();
 builder.Services.AddScoped<ProductService>();
+builder.Services.AddScoped<ProductSearchRepository>();
+builder.Services.AddScoped<ProductSearchService>();
 
+builder.Services.AddScoped<UnitRepository>();
+builder.Services.AddScoped<UnitService>();
+
+builder.Services.AddScoped<CategoryRepository>();
+builder.Services.AddScoped<CategoryService>();
+
+builder.Services.AddScoped<WarehouseProductRepository>();
+builder.Services.AddScoped<WarehouseProductService>();
+
+builder.Services.AddScoped<BusinessRepository>();
+builder.Services.AddScoped<BusinessService>();
+builder.Services.AddScoped<BusinessRepository>();
+builder.Services.AddScoped<BusinessService>();
+
+builder.Services.AddScoped<WarehouseRepository>();
+builder.Services.AddScoped<WarehouseService>();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
