@@ -55,4 +55,13 @@ public class UnitRepository
     {
         return await _context.Units.AnyAsync(u => u.Id == id);
     }
+
+    public async Task<bool> ExistsByNameAsync(string name, int? excludingId = null)
+    {
+        var normalizedName = name.Trim().ToLower();
+        return await _context.Units.AnyAsync(u =>
+            u.Name != null &&
+            u.Name.ToLower() == normalizedName &&
+            (!excludingId.HasValue || u.Id != excludingId.Value));
+    }
 }

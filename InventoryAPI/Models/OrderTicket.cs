@@ -11,6 +11,8 @@ public partial class OrderTicket
 
     public int? StatusId { get; set; }
 
+    public decimal? TaxRateSnapshot { get; set; }
+
     public virtual Customer? Customer { get; set; }
 
     public virtual ICollection<OrderCommand> OrderCommands { get; set; } = new List<OrderCommand>();

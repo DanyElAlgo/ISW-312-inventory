@@ -23,6 +23,8 @@ public partial class InventoryDbContext : DbContext
 
     public virtual DbSet<Customer> Customers { get; set; }
 
+    public virtual DbSet<GlobalTaxConfig> GlobalTaxConfigs { get; set; }
+
     public virtual DbSet<Kardex> Kardices { get; set; }
 
     public virtual DbSet<OrderCommand> OrderCommands { get; set; }
@@ -118,6 +120,18 @@ public partial class InventoryDbContext : DbContext
             entity.Property(e => e.Phone)
                 .HasMaxLength(50)
                 .HasColumnName("phone");
+        });
+
+        modelBuilder.Entity<GlobalTaxConfig>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("global_tax_config_pkey");
+
+            entity.ToTable("global_tax_config");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.TaxRate)
+                .HasColumnType("numeric(7,4)")
+                .HasColumnName("tax_rate");
         });
 
         modelBuilder.Entity<Kardex>(entity =>
@@ -220,6 +234,10 @@ public partial class InventoryDbContext : DbContext
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.CustomerId).HasColumnName("customer_id");
             entity.Property(e => e.StatusId).HasColumnName("status_id");
+            entity.Property(e => e.TaxRateSnapshot)
+                .HasColumnType("numeric(7,4)")
+                .HasDefaultValue(0m)
+                .HasColumnName("tax_rate_snapshot");
 
             entity.HasOne(d => d.Customer).WithMany(p => p.OrderTickets)
                 .HasForeignKey(d => d.CustomerId)
@@ -278,9 +296,15 @@ public partial class InventoryDbContext : DbContext
             entity.Property(e => e.Description)
                 .HasMaxLength(255)
                 .HasColumnName("description");
+            entity.Property(e => e.IsActive)
+                .HasDefaultValue(true)
+                .HasColumnName("is_active");
             entity.Property(e => e.Name)
                 .HasMaxLength(255)
                 .HasColumnName("name");
+            entity.Property(e => e.Price)
+                .HasColumnType("numeric(12,2)")
+                .HasColumnName("price");
             entity.Property(e => e.UnitId).HasColumnName("unit_id");
             entity.Property(e => e.UnitQty).HasColumnName("unit_qty");
 

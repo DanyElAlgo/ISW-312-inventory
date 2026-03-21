@@ -58,6 +58,16 @@ public class ProductRepository
         return await _context.Products.AnyAsync(i => i.Id == id);
     }
 
+    public async Task<bool> CategoryExistsAsync(int categoryId)
+    {
+        return await _context.Categories.AnyAsync(c => c.Id == categoryId);
+    }
+
+    public async Task<bool> UnitExistsAsync(int unitId)
+    {
+        return await _context.Units.AnyAsync(u => u.Id == unitId);
+    }
+
     public async Task<Kardex> AddKardexEntryAsync(Kardex kardexEntry)
     {
         _context.Kardices.Add(kardexEntry);

@@ -38,8 +38,19 @@ public class CategoriesController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        var category = await _service.CreateCategoryAsync(dto);
-        return CreatedAtAction(nameof(GetById), new { id = category.Id }, category);
+        try
+        {
+            var category = await _service.CreateCategoryAsync(dto);
+            return CreatedAtAction(nameof(GetById), new { id = category.Id }, category);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpPut("{id}")]
@@ -48,11 +59,22 @@ public class CategoriesController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        var category = await _service.UpdateCategoryAsync(id, dto);
-        if (category == null)
-            return NotFound(new { message = "Category not found" });
+        try
+        {
+            var category = await _service.UpdateCategoryAsync(id, dto);
+            if (category == null)
+                return NotFound(new { message = "Category not found" });
 
-        return Ok(category);
+            return Ok(category);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpDelete("{id}")]

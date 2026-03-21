@@ -7,3 +7,8 @@ public class StockOperationResultDto
     public int? NewStock { get; set; }
     public int? KardexId { get; set; }
 }
+
+public class OutOfStockUpdateDto
+{
+    public bool IsOutOfStock { get; set; }
+}

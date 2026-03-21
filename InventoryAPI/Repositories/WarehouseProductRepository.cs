@@ -89,6 +89,16 @@ public class WarehouseProductRepository
         return await _context.WarehouseProducts.AnyAsync(wp => wp.Id == id);
     }
 
+    public async Task<bool> ProductExistsAsync(int productId)
+    {
+        return await _context.Products.AnyAsync(p => p.Id == productId);
+    }
+
+    public async Task<bool> WarehouseExistsAsync(int warehouseId)
+    {
+        return await _context.Warehouses.AnyAsync(w => w.Id == warehouseId);
+    }
+
     public async Task<IEnumerable<WarehouseProduct>> GetLowStockItemsAsync()
     {
         return await _context.WarehouseProducts
@@ -97,5 +107,12 @@ public class WarehouseProductRepository
             .Include(wp => wp.Status)
             .Where(wp => wp.StockLeft < wp.LowStockQty)
             .ToListAsync();
+    }
+
+    public async Task<Kardex> AddKardexEntryAsync(Kardex kardexEntry)
+    {
+        _context.Kardices.Add(kardexEntry);
+        await _context.SaveChangesAsync();
+        return kardexEntry;
     }
 }

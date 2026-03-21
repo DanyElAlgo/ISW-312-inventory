@@ -40,8 +40,19 @@ public class ProductsController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        var product = await _service.CreateProductAsync(dto);
-        return CreatedAtAction(nameof(GetProductById), new { id = product.Id }, product);
+        try
+        {
+            var product = await _service.CreateProductAsync(dto);
+            return CreatedAtAction(nameof(GetProductById), new { id = product.Id }, product);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpPut("{id}")]
@@ -50,7 +61,28 @@ public class ProductsController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        var product = await _service.UpdateProductAsync(id, dto);
+        try
+        {
+            var product = await _service.UpdateProductAsync(id, dto);
+            if (product == null)
+                return NotFound(new { message = "Product not found" });
+
+            return Ok(product);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpPatch("{id}/active")]
+    public async Task<ActionResult<ProductGetDto>> SetProductActiveStatus(int id, [FromBody] ProductActivationDto dto)
+    {
+        var product = await _service.SetProductActiveStatusAsync(id, dto.IsActive);
         if (product == null)
             return NotFound(new { message = "Product not found" });
 

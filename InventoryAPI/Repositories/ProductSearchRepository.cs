@@ -59,6 +59,8 @@ public class ProductSearchRepository
                 Id = p.Id,
                 Name = p.Name,
                 Description = p.Description,
+                Price = p.Price,
+                IsActive = p.IsActive ?? true,
                 UnitId = p.UnitId,
                 UnitName = p.Unit != null ? p.Unit.Name : null,
                 UnitQty = p.UnitQty,

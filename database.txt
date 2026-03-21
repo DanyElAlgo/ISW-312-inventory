@@ -29,11 +29,13 @@ CREATE TABLE product_status (
 
 CREATE TABLE product (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(255),
+    name VARCHAR(255) NOT NULL,
     description VARCHAR(255),
-    unit_id INT,
-    unit_qty DOUBLE PRECISION,
-    category_id INT,
+    price NUMERIC(12,2) NOT NULL,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    unit_id INT NOT NULL,
+    unit_qty DOUBLE PRECISION NOT NULL,
+    category_id INT NOT NULL,
 
     FOREIGN KEY (unit_id) REFERENCES unit(id),
     FOREIGN KEY (category_id) REFERENCES category(id)
@@ -52,6 +54,7 @@ CREATE TABLE warehouse_product (
     warehouse_id INT,
     product_id INT,
     status_id INT,
+    price DOUBLE PRECISION NOT NULL,
     stock_left INT,
     low_stock_qty INT,
 
@@ -101,9 +104,15 @@ CREATE TABLE order_ticket (
     id SERIAL PRIMARY KEY,
     customer_id INT,
     status_id INT,
+    tax_rate_snapshot NUMERIC(7,4) NOT NULL DEFAULT 0,
 
     FOREIGN KEY (customer_id) REFERENCES customer(id),
     FOREIGN KEY (status_id) REFERENCES order_status(id)
+);
+
+CREATE TABLE global_tax_config (
+    id SERIAL PRIMARY KEY,
+    tax_rate NUMERIC(7,4) NOT NULL
 );
 
 CREATE TABLE order_item (
@@ -165,7 +174,7 @@ CREATE TABLE station (
 );
 
 CREATE TABLE command_item (
-    id SERIAL PRIMARY KEY
+    id SERIAL PRIMARY KEY,
     order_item_id INT,
     command_id INT,
     station_id INT,

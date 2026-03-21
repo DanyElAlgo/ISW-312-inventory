@@ -27,9 +27,14 @@ public class UnitService
 
     public async Task<UnitGetDto> CreateUnitAsync(UnitCreateDto dto)
     {
+        ValidateName(dto.Name);
+
+        if (await _repository.ExistsByNameAsync(dto.Name))
+            throw new InvalidOperationException("A unit with the same name already exists.");
+
         var unit = new Unit
         {
-            Name = dto.Name,
+            Name = dto.Name.Trim(),
             Description = dto.Description
         };
 
@@ -44,7 +49,14 @@ public class UnitService
             return null;
 
         if (!string.IsNullOrEmpty(dto.Name))
-            unit.Name = dto.Name;
+        {
+            ValidateName(dto.Name);
+
+            if (await _repository.ExistsByNameAsync(dto.Name, id))
+                throw new InvalidOperationException("A unit with the same name already exists.");
+
+            unit.Name = dto.Name.Trim();
+        }
         if (!string.IsNullOrEmpty(dto.Description))
             unit.Description = dto.Description;
 
@@ -65,5 +77,11 @@ public class UnitService
             Name = unit.Name,
             Description = unit.Description
         };
+    }
+
+    private static void ValidateName(string? name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ArgumentException("Unit name is required.");
     }
 }

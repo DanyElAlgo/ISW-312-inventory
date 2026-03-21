@@ -27,9 +27,14 @@ public class CategoryService
 
     public async Task<CategoryGetDto> CreateCategoryAsync(CategoryCreateDto dto)
     {
+        ValidateName(dto.Name);
+
+        if (await _repository.ExistsByNameAsync(dto.Name))
+            throw new InvalidOperationException("A category with the same name already exists.");
+
         var category = new Category
         {
-            Name = dto.Name,
+            Name = dto.Name.Trim(),
             Description = dto.Description
         };
 
@@ -44,7 +49,14 @@ public class CategoryService
             return null;
 
         if (!string.IsNullOrEmpty(dto.Name))
-            category.Name = dto.Name;
+        {
+            ValidateName(dto.Name);
+
+            if (await _repository.ExistsByNameAsync(dto.Name, id))
+                throw new InvalidOperationException("A category with the same name already exists.");
+
+            category.Name = dto.Name.Trim();
+        }
         if (!string.IsNullOrEmpty(dto.Description))
             category.Description = dto.Description;
 
@@ -66,5 +78,11 @@ public class CategoryService
             Description = category.Description,
             ProductCount = category.Products?.Count
         };
+    }
+
+    private static void ValidateName(string? name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ArgumentException("Category name is required.");
     }
 }

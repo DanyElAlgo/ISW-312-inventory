@@ -27,17 +27,23 @@ public class ProductService
 
     public async Task<ProductGetDto> CreateProductAsync(ProductCreateDto dto)
     {
+        await ValidateCreateAsync(dto);
+
         var product = new Product
         {
-            Name = dto.Name,
+            Name = dto.Name.Trim(),
             Description = dto.Description,
             UnitId = dto.UnitId,
             UnitQty = dto.UnitQty,
-            CategoryId = dto.CategoryId
+            CategoryId = dto.CategoryId,
+            Price = dto.Price,
+            IsActive = true
         };
 
         var createdProduct = await _repository.CreateAsync(product);
-        return MapToGetDto(createdProduct);
+        // Reload the product with related entities to populate Unit and Category names
+        var refreshedProduct = await _repository.GetByIdAsync(createdProduct.Id);
+        return MapToGetDto(refreshedProduct!);
     }
 
     public async Task<ProductGetDto?> UpdateProductAsync(int id, ProductUpdateDto dto)
@@ -47,16 +53,48 @@ public class ProductService
             return null;
 
         if (!string.IsNullOrEmpty(dto.Name))
-            product.Name = dto.Name;
+            product.Name = dto.Name.Trim();
         if (!string.IsNullOrEmpty(dto.Description))
             product.Description = dto.Description;
         if (dto.UnitId.HasValue)
+        {
+            if (!await _repository.UnitExistsAsync(dto.UnitId.Value))
+                throw new InvalidOperationException("Unit does not exist.");
+
             product.UnitId = dto.UnitId;
+        }
         if (dto.UnitQty.HasValue)
             product.UnitQty = dto.UnitQty;
         if (dto.CategoryId.HasValue)
-            product.CategoryId = dto.CategoryId;
+        {
+            if (!await _repository.CategoryExistsAsync(dto.CategoryId.Value))
+                throw new InvalidOperationException("Category does not exist.");
 
+            product.CategoryId = dto.CategoryId;
+        }
+        if (dto.Price.HasValue)
+        {
+            if (dto.Price.Value <= 0)
+                throw new ArgumentException("Price must be greater than 0.");
+
+            product.Price = dto.Price;
+        }
+        if (dto.IsActive.HasValue)
+            product.IsActive = dto.IsActive.Value;
+
+        ValidateProductState(product);
+
+        var updatedProduct = await _repository.UpdateAsync(product);
+        return MapToGetDto(updatedProduct);
+    }
+
+    public async Task<ProductGetDto?> SetProductActiveStatusAsync(int id, bool isActive)
+    {
+        var product = await _repository.GetByIdAsync(id);
+        if (product == null)
+            return null;
+
+        product.IsActive = isActive;
         var updatedProduct = await _repository.UpdateAsync(product);
         return MapToGetDto(updatedProduct);
     }
@@ -91,6 +129,8 @@ public class ProductService
             Id = product.Id,
             Name = product.Name,
             Description = product.Description,
+            Price = product.Price,
+            IsActive = product.IsActive ?? true,
             UnitId = product.UnitId,
             UnitName = product.Unit?.Name,
             UnitQty = product.UnitQty,
@@ -111,6 +151,36 @@ public class ProductService
             Reason = kardex.Reason,
             TimeStamp = kardex.TimeStamp
         };
+    }
+
+    private async Task ValidateCreateAsync(ProductCreateDto dto)
+    {
+        if (string.IsNullOrWhiteSpace(dto.Name))
+            throw new ArgumentException("Product name is required.");
+
+        if (dto.Price <= 0)
+            throw new ArgumentException("Price must be greater than 0.");
+
+        if (!await _repository.UnitExistsAsync(dto.UnitId))
+            throw new InvalidOperationException("Unit does not exist.");
+
+        if (!await _repository.CategoryExistsAsync(dto.CategoryId))
+            throw new InvalidOperationException("Category does not exist.");
+    }
+
+    private static void ValidateProductState(Product product)
+    {
+        if (string.IsNullOrWhiteSpace(product.Name))
+            throw new ArgumentException("Product name is required.");
+
+        if (!product.CategoryId.HasValue)
+            throw new ArgumentException("Category is required.");
+
+        if (!product.UnitId.HasValue)
+            throw new ArgumentException("Unit is required.");
+
+        if (!product.Price.HasValue || product.Price.Value <= 0)
+            throw new ArgumentException("Price must be greater than 0.");
     }
 }
 

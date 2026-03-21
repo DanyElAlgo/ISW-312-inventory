@@ -33,6 +33,7 @@ builder.Services.AddScoped<BusinessService>();
 
 builder.Services.AddScoped<WarehouseRepository>();
 builder.Services.AddScoped<WarehouseService>();
+builder.Services.AddScoped<PosService>();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

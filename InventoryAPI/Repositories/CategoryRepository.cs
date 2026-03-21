@@ -55,4 +55,13 @@ public class CategoryRepository
     {
         return await _context.Categories.AnyAsync(c => c.Id == id);
     }
+
+    public async Task<bool> ExistsByNameAsync(string name, int? excludingId = null)
+    {
+        var normalizedName = name.Trim().ToLower();
+        return await _context.Categories.AnyAsync(c =>
+            c.Name != null &&
+            c.Name.ToLower() == normalizedName &&
+            (!excludingId.HasValue || c.Id != excludingId.Value));
+    }
 }

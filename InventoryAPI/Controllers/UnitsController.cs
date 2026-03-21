@@ -38,8 +38,19 @@ public class UnitsController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        var unit = await _service.CreateUnitAsync(dto);
-        return CreatedAtAction(nameof(GetById), new { id = unit.Id }, unit);
+        try
+        {
+            var unit = await _service.CreateUnitAsync(dto);
+            return CreatedAtAction(nameof(GetById), new { id = unit.Id }, unit);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpPut("{id}")]
@@ -48,11 +59,22 @@ public class UnitsController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        var unit = await _service.UpdateUnitAsync(id, dto);
-        if (unit == null)
-            return NotFound(new { message = "Unit not found" });
+        try
+        {
+            var unit = await _service.UpdateUnitAsync(id, dto);
+            if (unit == null)
+                return NotFound(new { message = "Unit not found" });
 
-        return Ok(unit);
+            return Ok(unit);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpDelete("{id}")]
