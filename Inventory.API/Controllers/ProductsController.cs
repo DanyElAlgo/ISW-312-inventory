@@ -1,0 +1,137 @@
+using Microsoft.AspNetCore.Mvc;
+using Inventory.API.DTOs;
+using Inventory.API.Services;
+using Shared.Contracts.DTOs;
+
+namespace Inventory.API.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+public class ProductsController : ControllerBase
+{
+    private readonly ProductService _service;
+    private readonly ProductSearchService _searchService;
+
+    public ProductsController(ProductService service, ProductSearchService searchService)
+    {
+        _service = service;
+        _searchService = searchService;
+    }
+
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<ProductGetDto>>> GetAllProducts()
+    {
+        var products = await _service.GetAllProductsAsync();
+        return Ok(products);
+    }
+
+    [HttpGet("{id}")]
+    public async Task<ActionResult<ProductGetDto>> GetProductById(int id)
+    {
+        var product = await _service.GetProductByIdAsync(id);
+        if (product == null)
+            return NotFound(new { message = "Product not found" });
+
+        return Ok(product);
+    }
+
+    [HttpPost]
+    public async Task<ActionResult<ProductGetDto>> CreateProduct([FromBody] ProductCreateDto dto)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        try
+        {
+            var product = await _service.CreateProductAsync(dto);
+            return CreatedAtAction(nameof(GetProductById), new { id = product.Id }, product);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpPut("{id}")]
+    public async Task<ActionResult<ProductGetDto>> UpdateProduct(int id, [FromBody] ProductUpdateDto dto)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        try
+        {
+            var product = await _service.UpdateProductAsync(id, dto);
+            if (product == null)
+                return NotFound(new { message = "Product not found" });
+
+            return Ok(product);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpPatch("{id}/active")]
+    public async Task<ActionResult<ProductGetDto>> SetProductActiveStatus(int id, [FromBody] ProductActivationDto dto)
+    {
+        var product = await _service.SetProductActiveStatusAsync(id, dto.IsActive);
+        if (product == null)
+            return NotFound(new { message = "Product not found" });
+
+        return Ok(product);
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteProduct(int id)
+    {
+        var success = await _service.DeleteProductAsync(id);
+        if (!success)
+            return NotFound(new { message = "Product not found" });
+
+        return NoContent();
+    }
+
+    [HttpGet("{id}/history")]
+    public async Task<ActionResult<IEnumerable<KardexGetDto>>> GetProductHistory(int id)
+    {
+        var history = await _service.GetProductHistoryAsync(id);
+        return Ok(history);
+    }
+
+    /// <summary>
+    /// Returns a lightweight product reference used by Sales.API for cross-service lookups.
+    /// Includes stock availability computed across all warehouses.
+    /// </summary>
+    [HttpGet("{id}/reference")]
+    public async Task<ActionResult<ProductReferenceDto>> GetProductReference(int id)
+    {
+        var reference = await _service.GetProductReferenceAsync(id);
+        if (reference == null)
+            return NotFound(new { message = "Product not found" });
+
+        return Ok(reference);
+    }
+
+    /// <param name="filter">Search filter with optional searchTerm, categoryId, statusId and pagination</param>
+    [HttpPost("search")]
+    public async Task<ActionResult<PaginatedProductSearchDto>> SearchProducts([FromBody] ProductSearchFilterDto filter)
+    {
+        // Validate pagination parameters
+        if (filter.PageNumber < 1)
+            filter.PageNumber = 1;
+        if (filter.PageSize < 1 || filter.PageSize > 100)
+            filter.PageSize = 10;
+
+        var result = await _searchService.SearchProductsAsync(filter);
+        return Ok(result);
+    }
+}

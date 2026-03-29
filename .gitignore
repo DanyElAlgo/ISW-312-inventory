@@ -54,3 +54,6 @@ TestResult.xml
 nunit-*.xml
 InventoryAPI/appsettings.Development.json
 API_DOCUMENTATION.md
+API_ENDPOINTS.md
+CRUD_API_DOCUMENTATION.md
+hus.md
