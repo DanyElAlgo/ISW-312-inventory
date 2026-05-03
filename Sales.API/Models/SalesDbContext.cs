@@ -89,7 +89,6 @@ public partial class SalesDbContext : DbContext
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.AdditionalNote).HasMaxLength(255).HasColumnName("additional_note");
             entity.Property(e => e.OrderId).HasColumnName("order_id");
-            // product_id is a logical reference only — no EF navigation, no DB-level FK
             entity.Property(e => e.ProductId).HasColumnName("product_id");
             entity.Property(e => e.ProductName).HasMaxLength(255).HasColumnName("product_name");
             entity.Property(e => e.UnitPrice).HasColumnType("numeric(12,2)").HasColumnName("unit_price");
@@ -176,7 +175,6 @@ public partial class SalesDbContext : DbContext
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.Description).HasMaxLength(255).HasColumnName("description");
             entity.Property(e => e.Name).HasMaxLength(255).HasColumnName("name");
-            // CategoryIds is not mapped to the DB — it is populated from station_coverage via raw query
             entity.Ignore(e => e.CategoryIds);
         });
 

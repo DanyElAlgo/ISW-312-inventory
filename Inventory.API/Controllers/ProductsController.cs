@@ -107,10 +107,6 @@ public class ProductsController : ControllerBase
         return Ok(history);
     }
 
-    /// <summary>
-    /// Returns a lightweight product reference used by Sales.API for cross-service lookups.
-    /// Includes stock availability computed across all warehouses.
-    /// </summary>
     [HttpGet("{id}/reference")]
     public async Task<ActionResult<ProductReferenceDto>> GetProductReference(int id)
     {
@@ -121,11 +117,9 @@ public class ProductsController : ControllerBase
         return Ok(reference);
     }
 
-    /// <param name="filter">Search filter with optional searchTerm, categoryId, statusId and pagination</param>
     [HttpPost("search")]
     public async Task<ActionResult<PaginatedProductSearchDto>> SearchProducts([FromBody] ProductSearchFilterDto filter)
     {
-        // Validate pagination parameters
         if (filter.PageNumber < 1)
             filter.PageNumber = 1;
         if (filter.PageSize < 1 || filter.PageSize > 100)

@@ -11,9 +11,7 @@ public class InventoryClient
     {
         _http = http;
     }
-
-    // Fetches a lightweight product reference from Inventory.API.
-    // Returns null when the product does not exist (404) or Inventory.API is unreachable.
+    
     public async Task<ProductReferenceDto?> GetProductReferenceAsync(int productId)
     {
         try

@@ -81,7 +81,6 @@ public class StationManagementService
         if (stationType.Stations.Any())
             throw new InvalidOperationException("Cannot delete station type with existing stations.");
 
-        // Delete coverage entries first
         await _context.Database.ExecuteSqlRawAsync(
             "DELETE FROM sales.station_coverage WHERE station_type_id = {0}", id);
 

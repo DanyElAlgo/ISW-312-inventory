@@ -13,7 +13,6 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<SalesDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Typed HTTP client for cross-service calls to Inventory.API
 builder.Services.AddHttpClient<InventoryClient>(client =>
 {
     var baseUrl = builder.Configuration["InventoryApi:BaseUrl"]
@@ -42,7 +41,8 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
+var enableSwagger = builder.Configuration.GetValue<bool>("Swagger:Enabled", app.Environment.IsDevelopment());
+if (enableSwagger)
 {
     app.UseSwagger();
     app.UseSwaggerUI();

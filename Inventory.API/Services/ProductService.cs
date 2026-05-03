@@ -42,7 +42,6 @@ public class ProductService
         };
 
         var createdProduct = await _repository.CreateAsync(product);
-        // Reload the product with related entities to populate Unit and Category names
         var refreshedProduct = await _repository.GetByIdAsync(createdProduct.Id);
         return MapToGetDto(refreshedProduct!);
     }

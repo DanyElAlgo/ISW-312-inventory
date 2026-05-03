@@ -13,8 +13,6 @@ public class SalesCrudService
         _context = context;
     }
 
-    // ─── Customers ───────────────────────────────────────────────────────────
-
     public async Task<List<CustomerGetDto>> GetCustomersAsync()
     {
         return await _context.Customers
@@ -63,8 +61,6 @@ public class SalesCrudService
         return true;
     }
 
-    // ─── Order Statuses (reference data) ─────────────────────────────────────
-
     public async Task<List<OrderStatusGetDto>> GetOrderStatusesAsync()
     {
         return await _context.OrderStatuses
@@ -77,8 +73,6 @@ public class SalesCrudService
             .ToListAsync();
     }
 
-    // ─── Payment Types (reference data) ──────────────────────────────────────
-
     public async Task<List<PaymentTypeGetDto>> GetPaymentTypesAsync()
     {
         return await _context.PaymentTypes
@@ -90,8 +84,6 @@ public class SalesCrudService
             })
             .ToListAsync();
     }
-
-    // ─── Orders (OrderTickets) ────────────────────────────────────────────────
 
     public async Task<List<OrderGetDto>> GetOrdersAsync()
     {
@@ -160,8 +152,6 @@ public class SalesCrudService
         await _context.SaveChangesAsync();
         return true;
     }
-
-    // ─── Order Items ──────────────────────────────────────────────────────────
 
     public async Task<List<OrderItemGetDto>> GetOrderItemsAsync(int orderId)
     {
@@ -247,8 +237,6 @@ public class SalesCrudService
         await _context.SaveChangesAsync();
         return true;
     }
-
-    // ─── Payments ─────────────────────────────────────────────────────────────
 
     public async Task<List<PaymentGetDto>> GetPaymentsAsync(int orderId)
     {

@@ -16,10 +16,9 @@ public class DashboardService
         _inventoryClient = inventoryClient;
     }
 
-    // HU-23: ventas del día
     public async Task<SalesDashboardDto> GetSalesDashboardAsync()
     {
-        var todayUtc = DateTime.UtcNow.Date;
+        var todayUtc = DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Unspecified);
         var tomorrowUtc = todayUtc.AddDays(1);
 
         var paidTicketIds = await _context.Payments
@@ -54,7 +53,6 @@ public class DashboardService
         };
     }
 
-    // HU-24: top productos
     public async Task<List<TopProductDto>> GetTopProductsAsync(int limit = 10)
     {
         var paidTicketIds = await _context.Payments
@@ -81,7 +79,6 @@ public class DashboardService
             .ToListAsync();
     }
 
-    // HU-25: alertas de stock (via Inventory.API)
     public async Task<StockAlertsDashboardDto> GetStockAlertsDashboardAsync()
     {
         var result = new StockAlertsDashboardDto();
@@ -111,7 +108,6 @@ public class DashboardService
         return result;
     }
 
-    // HU-26: estado de comandas KDS
     public async Task<KdsStatusSummaryDto> GetKdsStatusSummaryAsync()
     {
         var items = await _context.CommandItems

@@ -98,8 +98,6 @@ public class ProductRepository
             .OrderByDescending(k => k.TimeStamp)
             .ToListAsync();
     }
-
-    // Status id 4 is the out-of-stock status as defined in product_status seed data.
     private const int OutOfStockStatusId = 4;
 
     public async Task<bool> HasAvailableStockAsync(int productId)

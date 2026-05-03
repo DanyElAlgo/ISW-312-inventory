@@ -27,7 +27,6 @@ public class ProductSearchRepository
             .ThenInclude(wp => wp.Status)
             .AsQueryable();
 
-        // Apply search term filter (partial match on name and description)
         if (!string.IsNullOrWhiteSpace(searchTerm))
         {
             var lowerSearchTerm = searchTerm.ToLower();
@@ -36,13 +35,11 @@ public class ProductSearchRepository
                 p.Description != null && p.Description.ToLower().Contains(lowerSearchTerm));
         }
 
-        // Apply category filter
         if (categoryId.HasValue)
         {
             query = query.Where(p => p.CategoryId == categoryId);
         }
 
-        // Apply status filter (filter by warehouse product status)
         if (statusId.HasValue)
         {
             query = query.Where(p => p.WarehouseProducts.Any(wp => wp.StatusId == statusId));

@@ -84,7 +84,6 @@ public class PosService
 
         var waiter = await GetAssignedWaiterAsync(ticket.Id);
 
-        // Product name and price come from snapshot columns — no HTTP call needed here
         var items = ticket.OrderItems
             .Where(i => i.ProductId.HasValue)
             .Select(i =>
@@ -162,7 +161,6 @@ public class PosService
         if (ticket == null)
             return null;
 
-        // Validate product via Inventory.API HTTP call
         var productRef = await _inventoryClient.GetProductReferenceAsync(dto.ProductId);
         if (productRef == null)
             throw new InvalidOperationException("Product not found.");
@@ -179,7 +177,6 @@ public class PosService
         {
             OrderId = ticketId,
             ProductId = dto.ProductId,
-            // Snapshot product data at order time so history remains stable
             ProductName = productRef.Name,
             UnitPrice = productRef.Price,
             Qty = dto.Quantity,
@@ -336,7 +333,8 @@ public class PosService
                 ProductName = ci.OrderItem.ProductName ?? string.Empty,
                 Quantity = ci.OrderItem.Qty ?? 0,
                 Note = ci.OrderItem.AdditionalNote,
-                Status = ci.OrderItem.Status?.Name ?? "Pending"
+                Status = ci.OrderItem.Status.Name
+                ?? "Pending"
             })
             .ToListAsync();
     }
@@ -440,7 +438,6 @@ public class PosService
         if (paymentType == null)
             throw new InvalidOperationException("Payment type not found.");
 
-        // Validate stock for all items
         var checkDto = new Shared.Contracts.DTOs.BulkStockCheckDto
         {
             Items = items.Select(i => new Shared.Contracts.DTOs.BulkStockCheckItemDto
@@ -463,7 +460,6 @@ public class PosService
                 $"Insufficient stock for: {string.Join(", ", shortages)}");
         }
 
-        // Deduct stock
         var deductDto = new Shared.Contracts.DTOs.BulkStockDeductDto
         {
             Items = items.Select(i => new Shared.Contracts.DTOs.BulkStockCheckItemDto
@@ -478,7 +474,6 @@ public class PosService
         if (deduction == null || !deduction.Success)
             throw new InvalidOperationException(deduction?.Message ?? "Stock deduction failed.");
 
-        // Create payment
         var payment = new Payment
         {
             OrderId = ticketId,
@@ -487,11 +482,9 @@ public class PosService
         };
         _context.Payments.Add(payment);
 
-        // Mark ticket as paid
         ticket.StatusId = await GetOrCreatePaidStatusIdAsync();
         await _context.SaveChangesAsync();
 
-        // Compute total for result
         var subtotal = items.Sum(i => (i.UnitPrice ?? 0) * (decimal)(i.Qty ?? 0));
         var tax = subtotal * (ticket.TaxRateSnapshot ?? 0);
 
@@ -585,7 +578,6 @@ public class PosService
 
         var categoryId = productRef.CategoryId.Value;
 
-        // station_coverage stores (station_type_id, category_id) — category_id is a logical ref
         var stationTypeId = await _context.Database
             .SqlQueryRaw<int>(
                 "SELECT station_type_id AS \"Value\" FROM sales.station_coverage WHERE category_id = {0} LIMIT 1",
