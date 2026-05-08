@@ -2,6 +2,7 @@ using Sales.API.DTOs;
 using Sales.API.HttpClients;
 using Microsoft.EntityFrameworkCore;
 using Sales.API.Models;
+using Microsoft.Extensions.Options;
 
 namespace Sales.API.Services;
 
@@ -9,11 +10,16 @@ public class DashboardService
 {
     private readonly SalesDbContext _context;
     private readonly InventoryClient _inventoryClient;
+    private readonly InventoryIntegrationOptions _integrationOptions;
 
-    public DashboardService(SalesDbContext context, InventoryClient inventoryClient)
+    public DashboardService(
+        SalesDbContext context,
+        InventoryClient inventoryClient,
+        IOptions<InventoryIntegrationOptions> integrationOptions)
     {
         _context = context;
         _inventoryClient = inventoryClient;
+        _integrationOptions = integrationOptions.Value;
     }
 
     public async Task<SalesDashboardDto> GetSalesDashboardAsync()
@@ -65,11 +71,11 @@ public class DashboardService
             return new List<TopProductDto>();
 
         return await _context.OrderItems
-            .Where(i => i.OrderId.HasValue && paidTicketIds.Contains(i.OrderId.Value) && i.ProductId.HasValue)
-            .GroupBy(i => new { i.ProductId, i.ProductName })
+            .Where(i => i.OrderId.HasValue && paidTicketIds.Contains(i.OrderId.Value) && !string.IsNullOrWhiteSpace(i.ProductCen))
+            .GroupBy(i => new { i.ProductCen, i.ProductName })
             .Select(g => new TopProductDto
             {
-                ProductId = g.Key.ProductId ?? 0,
+                ProductCen = g.Key.ProductCen ?? string.Empty,
                 ProductName = g.Key.ProductName ?? string.Empty,
                 TotalQtySold = g.Sum(i => i.Qty ?? 0),
                 TotalRevenue = g.Sum(i => (i.UnitPrice ?? 0) * (decimal)(i.Qty ?? 0))
@@ -83,25 +89,29 @@ public class DashboardService
     {
         var result = new StockAlertsDashboardDto();
 
-        var lowStockItems = await _inventoryClient.GetLowStockItemsAsync();
-        if (lowStockItems == null)
+        var stockItems = await _inventoryClient.GetStockAsync(
+            _integrationOptions.CompanyCen,
+            null,
+            _integrationOptions.WarehouseCen);
+
+        if (stockItems == null)
             return result;
 
-        foreach (var item in lowStockItems)
+        foreach (var item in stockItems)
         {
             var alert = new StockAlertDto
             {
-                ProductId = item.ProductId ?? 0,
-                ProductName = item.ProductName ?? string.Empty,
-                WarehouseName = item.WarehouseName ?? string.Empty,
-                StockLeft = item.StockLeft ?? 0,
-                LowStockQty = item.LowStockQty ?? 0,
-                IsOutOfStock = item.StatusName?.ToLower() is "out of stock" or "agotado" || item.StockLeft == 0
+                ProductCen = item.ProductCen,
+                ProductName = item.ProductName,
+                WarehouseName = item.WarehouseName,
+                StockLeft = (int)item.AvailableQuantity,
+                LowStockQty = (int)item.ReorderLevel,
+                IsOutOfStock = item.AvailableQuantity <= 0
             };
 
             if (alert.IsOutOfStock)
                 result.OutOfStock.Add(alert);
-            else
+            else if (item.IsLowStock)
                 result.LowStock.Add(alert);
         }
 

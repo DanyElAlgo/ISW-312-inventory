@@ -136,6 +136,7 @@ public class WarehouseProductService
         {
             WarehouseId = dto.WarehouseId,
             ProductId = dto.ProductId,
+            MovementCen = BuildMovementCen(),
             ActionType = "INITIAL",
             ActionQty = dto.Quantity,
             Reason = string.IsNullOrWhiteSpace(dto.Reason) ? "Initial stock registration" : dto.Reason,
@@ -203,6 +204,7 @@ public class WarehouseProductService
         {
             WarehouseId = dto.WarehouseId,
             ProductId = dto.ProductId,
+            MovementCen = BuildMovementCen(),
             ActionType = isExit ? "EXIT" : "ENTRY",
             ActionQty = dto.Quantity,
             Reason = dto.Reason.Trim(),
@@ -320,5 +322,10 @@ public class WarehouseProductService
             StockLeft = item.StockLeft,
             LowStockQty = item.LowStockQty
         };
+    }
+
+    private static string BuildMovementCen()
+    {
+        return $"MOV-{Guid.NewGuid():N}";
     }
 }

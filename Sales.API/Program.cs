@@ -20,6 +20,9 @@ builder.Services.AddHttpClient<InventoryClient>(client =>
     client.BaseAddress = new Uri(baseUrl);
 });
 
+builder.Services.Configure<InventoryIntegrationOptions>(
+    builder.Configuration.GetSection("InventoryIntegration"));
+
 builder.Services.AddScoped<PosService>();
 builder.Services.AddScoped<SalesCrudService>();
 builder.Services.AddScoped<DashboardService>();

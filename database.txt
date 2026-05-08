@@ -4,19 +4,32 @@
 
 CREATE TABLE business (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(255)
+    name VARCHAR(255),
+    cen VARCHAR(64),
+    is_active BOOLEAN NOT NULL DEFAULT TRUE
 );
 
 CREATE TABLE category (
     id SERIAL PRIMARY KEY,
+    business_id INT NOT NULL,
     name VARCHAR(255),
-    description VARCHAR(255)
+    description VARCHAR(255),
+    cen VARCHAR(64),
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+
+    FOREIGN KEY (business_id) REFERENCES business(id)
 );
 
 CREATE TABLE unit (
     id SERIAL PRIMARY KEY,
+    business_id INT NOT NULL,
     name VARCHAR(255),
-    description VARCHAR(255)
+    description VARCHAR(255),
+    abbreviation VARCHAR(50),
+    cen VARCHAR(64),
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+
+    FOREIGN KEY (business_id) REFERENCES business(id)
 );
 
 CREATE TABLE product_status (
@@ -29,14 +42,21 @@ CREATE TABLE product_status (
 
 CREATE TABLE product (
     id SERIAL PRIMARY KEY,
+    business_id INT NOT NULL,
+    cen VARCHAR(64),
+    sku VARCHAR(100),
     name VARCHAR(255) NOT NULL,
     description VARCHAR(255),
     price NUMERIC(12,2) NOT NULL,
+    cost_price NUMERIC(12,2),
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     unit_id INT NOT NULL,
     unit_qty DOUBLE PRECISION NOT NULL,
     category_id INT NOT NULL,
+    station_code VARCHAR(50),
+    reorder_level INT NOT NULL DEFAULT 0,
 
+    FOREIGN KEY (business_id) REFERENCES business(id),
     FOREIGN KEY (unit_id) REFERENCES unit(id),
     FOREIGN KEY (category_id) REFERENCES category(id)
 );
@@ -45,6 +65,8 @@ CREATE TABLE warehouse (
     id SERIAL PRIMARY KEY,
     business_id INT,
     name VARCHAR(255),
+    cen VARCHAR(64),
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
 
     FOREIGN KEY (business_id) REFERENCES business(id)
 );
@@ -67,12 +89,42 @@ CREATE TABLE kardex (
     id SERIAL PRIMARY KEY,
     warehouse_id INT,
     product_id INT,
+    document_id INT,
+    movement_cen VARCHAR(64),
     action_type VARCHAR(50),
     action_qty DOUBLE PRECISION,
     time_stamp TIMESTAMP,
     reason VARCHAR(255),
 
     FOREIGN KEY (warehouse_id) REFERENCES warehouse(id),
+    FOREIGN KEY (product_id) REFERENCES product(id)
+);
+
+CREATE TABLE inventory_document (
+    id SERIAL PRIMARY KEY,
+    business_id INT NOT NULL,
+    warehouse_id INT NOT NULL,
+    document_cen VARCHAR(64) NOT NULL,
+    document_type VARCHAR(50) NOT NULL,
+    status VARCHAR(50) NOT NULL,
+    reason VARCHAR(255),
+    external_reference VARCHAR(255),
+    source VARCHAR(50),
+    reference_cen VARCHAR(100),
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (business_id) REFERENCES business(id),
+    FOREIGN KEY (warehouse_id) REFERENCES warehouse(id)
+);
+
+CREATE TABLE inventory_document_line (
+    id SERIAL PRIMARY KEY,
+    document_id INT NOT NULL,
+    product_id INT NOT NULL,
+    quantity DOUBLE PRECISION NOT NULL,
+    unit_cost NUMERIC(12,2),
+
+    FOREIGN KEY (document_id) REFERENCES inventory_document(id),
     FOREIGN KEY (product_id) REFERENCES product(id)
 );
 
@@ -121,6 +173,7 @@ CREATE TABLE order_item (
     additional_note VARCHAR(255),
     order_id INT,
     product_id INT,
+    product_cen VARCHAR(64),
     status_id INT,
 
     FOREIGN KEY (order_id) REFERENCES order_ticket(id),

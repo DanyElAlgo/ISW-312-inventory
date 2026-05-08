@@ -9,7 +9,7 @@ public class SalesDashboardDto
 
 public class TopProductDto
 {
-    public int ProductId { get; set; }
+    public string ProductCen { get; set; } = string.Empty;
     public string ProductName { get; set; } = string.Empty;
     public double TotalQtySold { get; set; }
     public decimal TotalRevenue { get; set; }
@@ -24,7 +24,7 @@ public class KdsStatusSummaryDto
 
 public class StockAlertDto
 {
-    public int ProductId { get; set; }
+    public string ProductCen { get; set; } = string.Empty;
     public string ProductName { get; set; } = string.Empty;
     public string WarehouseName { get; set; } = string.Empty;
     public int StockLeft { get; set; }

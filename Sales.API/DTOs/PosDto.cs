@@ -20,8 +20,8 @@ public class AssignWaiterDto
 
 public class AddOrderItemDto
 {
-    [Range(1, int.MaxValue)]
-    public int ProductId { get; set; }
+    [Required]
+    public string ProductCen { get; set; } = string.Empty;
 
     [Range(typeof(double), "0.01", "79228162514264337593543950335")]
     public double Quantity { get; set; }
@@ -40,7 +40,7 @@ public class UpdateOrderItemDto
 public class PosOrderItemDto
 {
     public int Id { get; set; }
-    public int ProductId { get; set; }
+    public string ProductCen { get; set; } = string.Empty;
     public string ProductName { get; set; } = string.Empty;
     public decimal UnitPrice { get; set; }
     public double Quantity { get; set; }

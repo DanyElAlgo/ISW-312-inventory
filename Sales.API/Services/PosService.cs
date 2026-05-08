@@ -2,6 +2,7 @@ using Sales.API.DTOs;
 using Sales.API.HttpClients;
 using Sales.API.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace Sales.API.Services;
 
@@ -9,11 +10,16 @@ public class PosService
 {
     private readonly SalesDbContext _context;
     private readonly InventoryClient _inventoryClient;
+    private readonly InventoryIntegrationOptions _integrationOptions;
 
-    public PosService(SalesDbContext context, InventoryClient inventoryClient)
+    public PosService(
+        SalesDbContext context,
+        InventoryClient inventoryClient,
+        IOptions<InventoryIntegrationOptions> integrationOptions)
     {
         _context = context;
         _inventoryClient = inventoryClient;
+        _integrationOptions = integrationOptions.Value;
     }
 
     public async Task<GlobalTaxConfigDto> GetGlobalTaxAsync()
@@ -85,7 +91,7 @@ public class PosService
         var waiter = await GetAssignedWaiterAsync(ticket.Id);
 
         var items = ticket.OrderItems
-            .Where(i => i.ProductId.HasValue)
+            .Where(i => !string.IsNullOrWhiteSpace(i.ProductCen) || i.ProductId.HasValue)
             .Select(i =>
             {
                 var qty = i.Qty ?? 0;
@@ -93,7 +99,7 @@ public class PosService
                 return new PosOrderItemDto
                 {
                     Id = i.Id,
-                    ProductId = i.ProductId!.Value,
+                    ProductCen = i.ProductCen ?? i.ProductId?.ToString() ?? string.Empty,
                     ProductName = i.ProductName ?? string.Empty,
                     UnitPrice = unitPrice,
                     Quantity = qty,
@@ -161,14 +167,27 @@ public class PosService
         if (ticket == null)
             return null;
 
-        var productRef = await _inventoryClient.GetProductReferenceAsync(dto.ProductId);
-        if (productRef == null)
+        if (string.IsNullOrWhiteSpace(dto.ProductCen))
+            throw new InvalidOperationException("Product CEN is required.");
+
+        var product = await _inventoryClient.GetProductAsync(_integrationOptions.CompanyCen, dto.ProductCen);
+        if (product == null)
             throw new InvalidOperationException("Product not found.");
 
-        if (!productRef.IsActive)
+        var status = product.Status.Trim().ToUpperInvariant();
+        if (status is "INACTIVE")
             throw new InvalidOperationException("Product is inactive and cannot be added to the ticket.");
 
-        if (!productRef.HasAvailableStock)
+        if (status is "OUT_OF_STOCK")
+            throw new InvalidOperationException("Product is out of stock and cannot be added to the ticket.");
+
+        var stock = await _inventoryClient.GetStockAsync(
+            _integrationOptions.CompanyCen,
+            product.ProductCen,
+            _integrationOptions.WarehouseCen);
+
+        var stockItem = stock?.FirstOrDefault();
+        if (stockItem == null || stockItem.AvailableQuantity <= 0)
             throw new InvalidOperationException("Product is out of stock and cannot be added to the ticket.");
 
         var pendingStatusId = await GetOrCreatePendingStatusIdAsync();
@@ -176,9 +195,9 @@ public class PosService
         var item = new OrderItem
         {
             OrderId = ticketId,
-            ProductId = dto.ProductId,
-            ProductName = productRef.Name,
-            UnitPrice = productRef.Price,
+            ProductCen = product.ProductCen,
+            ProductName = product.Name,
+            UnitPrice = product.SalePrice,
             Qty = dto.Quantity,
             AdditionalNote = dto.Note,
             StatusId = pendingStatusId
@@ -259,10 +278,10 @@ public class PosService
         var sentCount = 0;
         foreach (var item in unsentItems)
         {
-            if (!item.ProductId.HasValue)
+            if (string.IsNullOrWhiteSpace(item.ProductCen))
                 continue;
 
-            var stationId = await ResolveStationForProductAsync(item.ProductId.Value);
+            var stationId = await ResolveStationForProductAsync(item.ProductCen);
             if (!stationId.HasValue)
                 continue;
 
@@ -430,7 +449,9 @@ public class PosService
         if (waiter == null)
             throw new InvalidOperationException("A waiter must be assigned before checkout.");
 
-        var items = ticket.OrderItems.Where(i => i.ProductId.HasValue).ToList();
+        var items = ticket.OrderItems
+            .Where(i => !string.IsNullOrWhiteSpace(i.ProductCen))
+            .ToList();
         if (!items.Any())
             throw new InvalidOperationException("Account has no items.");
 
@@ -438,41 +459,49 @@ public class PosService
         if (paymentType == null)
             throw new InvalidOperationException("Payment type not found.");
 
-        var checkDto = new Shared.Contracts.DTOs.BulkStockCheckDto
+        var checkDto = new StockValidationRequest
         {
-            Items = items.Select(i => new Shared.Contracts.DTOs.BulkStockCheckItemDto
+            WarehouseCen = _integrationOptions.WarehouseCen,
+            Source = _integrationOptions.Source,
+            ReferenceCen = BuildAccountNumber(ticketId),
+            Items = items.Select(i => new StockValidationItemDto
             {
-                ProductId = i.ProductId!.Value,
-                Quantity = i.Qty ?? 0
+                ProductCen = i.ProductCen ?? string.Empty,
+                Quantity = (decimal)(i.Qty ?? 0)
             }).ToList()
         };
 
-        var validation = await _inventoryClient.ValidateBulkStockAsync(checkDto);
+        var validation = await _inventoryClient.ValidateStockAsync(_integrationOptions.CompanyCen, checkDto);
         if (validation == null)
             throw new InvalidOperationException("Could not validate stock. Inventory service unavailable.");
 
-        if (!validation.AllAvailable)
+        if (!validation.IsValid)
         {
-            var shortages = validation.Lines
-                .Where(l => !l.Sufficient)
-                .Select(l => $"{l.ProductName} (required: {l.Required}, available: {l.Available})");
+            var shortages = validation.Requirements
+                .Select(l => $"{l.ProductName} (required: {l.RequestedQuantity}, available: {l.AvailableQuantity})");
             throw new InvalidOperationException(
                 $"Insufficient stock for: {string.Join(", ", shortages)}");
         }
 
-        var deductDto = new Shared.Contracts.DTOs.BulkStockDeductDto
+        var deductDto = new StockConsumeRequest
         {
-            Items = items.Select(i => new Shared.Contracts.DTOs.BulkStockCheckItemDto
+            WarehouseCen = _integrationOptions.WarehouseCen,
+            Source = _integrationOptions.Source,
+            ReferenceCen = BuildAccountNumber(ticketId),
+            Reason = $"Sale — ticket #{ticketId}",
+            Items = items.Select(i => new StockConsumeItemDto
             {
-                ProductId = i.ProductId!.Value,
-                Quantity = i.Qty ?? 0
-            }).ToList(),
-            Reason = $"Sale — ticket #{ticketId}"
+                ProductCen = i.ProductCen ?? string.Empty,
+                Quantity = (decimal)(i.Qty ?? 0)
+            }).ToList()
         };
 
-        var deduction = await _inventoryClient.DeductBulkStockAsync(deductDto);
-        if (deduction == null || !deduction.Success)
-            throw new InvalidOperationException(deduction?.Message ?? "Stock deduction failed.");
+        var deduction = await _inventoryClient.ConsumeStockAsync(_integrationOptions.CompanyCen, deductDto);
+        if (deduction == null)
+            throw new InvalidOperationException("Stock deduction failed.");
+
+        if (!deduction.Success)
+            throw new InvalidOperationException(deduction.Message ?? "Stock deduction failed.");
 
         var payment = new Payment
         {
@@ -570,25 +599,29 @@ public class PosService
         return await _context.Waiters.FirstOrDefaultAsync(w => w.Id == waiterId.Value);
     }
 
-    private async Task<int?> ResolveStationForProductAsync(int productId)
+    private async Task<int?> ResolveStationForProductAsync(string productCen)
     {
-        var productRef = await _inventoryClient.GetProductReferenceAsync(productId);
-        if (productRef?.CategoryId == null)
+        var product = await _inventoryClient.GetProductAsync(_integrationOptions.CompanyCen, productCen);
+        if (product == null || string.IsNullOrWhiteSpace(product.StationCode))
             return null;
 
-        var categoryId = productRef.CategoryId.Value;
+        var normalized = product.StationCode.Trim().ToLower();
 
-        var stationTypeId = await _context.Database
-            .SqlQueryRaw<int>(
-                "SELECT station_type_id AS \"Value\" FROM sales.station_coverage WHERE category_id = {0} LIMIT 1",
-                categoryId)
+        var stationTypeId = await _context.StationTypes
+            .Where(s => s.Name != null && s.Name.ToLower() == normalized)
+            .Select(s => s.Id)
             .FirstOrDefaultAsync();
 
-        if (stationTypeId == 0)
-            return null;
+        if (stationTypeId != 0)
+        {
+            return await _context.Stations
+                .Where(s => s.TypeId == stationTypeId)
+                .Select(s => (int?)s.Id)
+                .FirstOrDefaultAsync();
+        }
 
         return await _context.Stations
-            .Where(s => s.TypeId == stationTypeId)
+            .Where(s => s.Name != null && s.Name.ToLower() == normalized)
             .Select(s => (int?)s.Id)
             .FirstOrDefaultAsync();
     }

@@ -1,5 +1,5 @@
 using System.Net.Http.Json;
-using Shared.Contracts.DTOs;
+using Sales.API.DTOs;
 
 namespace Sales.API.HttpClients;
 
@@ -12,31 +12,53 @@ public class InventoryClient
         _http = http;
     }
     
-    public async Task<ProductReferenceDto?> GetProductReferenceAsync(int productId)
+    public async Task<InventoryProductDto?> GetProductAsync(string companyCen, string productCen)
     {
         try
         {
-            var response = await _http.GetAsync($"api/products/{productId}/reference");
+            var response = await _http.GetAsync($"api/inventory/companies/{companyCen}/products/{productCen}");
             if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
                 return null;
 
             response.EnsureSuccessStatusCode();
-            return await response.Content.ReadFromJsonAsync<ProductReferenceDto>();
+            return await response.Content.ReadFromJsonAsync<InventoryProductDto>();
         }
         catch (HttpRequestException)
         {
             throw new InvalidOperationException(
-                "Inventory service is unavailable. Cannot validate product at this time.");
+                "Inventory service is unavailable. Cannot fetch product at this time.");
         }
     }
 
-    public async Task<BulkStockCheckResultDto?> ValidateBulkStockAsync(BulkStockCheckDto dto)
+    public async Task<List<InventoryStockItemDto>?> GetStockAsync(string companyCen, string? productCen, string? warehouseCen)
     {
         try
         {
-            var response = await _http.PostAsJsonAsync("api/stock/bulk-validate", dto);
+            var query = new List<string>();
+            if (!string.IsNullOrWhiteSpace(productCen))
+                query.Add($"productCen={Uri.EscapeDataString(productCen)}");
+            if (!string.IsNullOrWhiteSpace(warehouseCen))
+                query.Add($"warehouseCen={Uri.EscapeDataString(warehouseCen)}");
+
+            var queryString = query.Count > 0 ? $"?{string.Join("&", query)}" : string.Empty;
+            var response = await _http.GetAsync($"api/inventory/companies/{companyCen}/stock{queryString}");
             response.EnsureSuccessStatusCode();
-            return await response.Content.ReadFromJsonAsync<BulkStockCheckResultDto>();
+            return await response.Content.ReadFromJsonAsync<List<InventoryStockItemDto>>();
+        }
+        catch (HttpRequestException)
+        {
+            throw new InvalidOperationException(
+                "Inventory service is unavailable. Cannot read stock at this time.");
+        }
+    }
+
+    public async Task<StockValidationResponse?> ValidateStockAsync(string companyCen, StockValidationRequest dto)
+    {
+        try
+        {
+            var response = await _http.PostAsJsonAsync($"api/inventory/companies/{companyCen}/stock/validate", dto);
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadFromJsonAsync<StockValidationResponse>();
         }
         catch (HttpRequestException)
         {
@@ -45,32 +67,18 @@ public class InventoryClient
         }
     }
 
-    public async Task<BulkStockDeductResultDto?> DeductBulkStockAsync(BulkStockDeductDto dto)
+    public async Task<StockConsumeResponse?> ConsumeStockAsync(string companyCen, StockConsumeRequest dto)
     {
         try
         {
-            var response = await _http.PostAsJsonAsync("api/stock/bulk-deduct", dto);
+            var response = await _http.PostAsJsonAsync($"api/inventory/companies/{companyCen}/stock/consume", dto);
             response.EnsureSuccessStatusCode();
-            return await response.Content.ReadFromJsonAsync<BulkStockDeductResultDto>();
+            return await response.Content.ReadFromJsonAsync<StockConsumeResponse>();
         }
         catch (HttpRequestException)
         {
             throw new InvalidOperationException(
                 "Inventory service is unavailable. Cannot deduct stock at this time.");
-        }
-    }
-
-    public async Task<List<WarehouseProductDto>?> GetLowStockItemsAsync()
-    {
-        try
-        {
-            var response = await _http.GetAsync("api/warehouseproducts/stock/low");
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadFromJsonAsync<List<WarehouseProductDto>>();
-        }
-        catch (HttpRequestException)
-        {
-            return null;
         }
     }
 }

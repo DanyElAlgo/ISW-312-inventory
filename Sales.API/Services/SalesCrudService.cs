@@ -164,7 +164,7 @@ public class SalesCrudService
                 Qty = i.Qty ?? 0,
                 AdditionalNote = i.AdditionalNote,
                 OrderId = i.OrderId,
-                ProductId = i.ProductId,
+                ProductCen = i.ProductCen,
                 UnitPrice = i.UnitPrice ?? 0,
                 ProductName = i.ProductName,
                 StatusId = i.StatusId,
@@ -180,7 +180,7 @@ public class SalesCrudService
             Qty = dto.Qty,
             AdditionalNote = dto.AdditionalNote,
             OrderId = dto.OrderId,
-            ProductId = dto.ProductId,
+            ProductCen = dto.ProductCen,
             StatusId = dto.StatusId
         };
         _context.OrderItems.Add(item);
@@ -196,7 +196,7 @@ public class SalesCrudService
             Qty = created.Qty ?? 0,
             AdditionalNote = created.AdditionalNote,
             OrderId = created.OrderId,
-            ProductId = created.ProductId,
+            ProductCen = created.ProductCen,
             UnitPrice = created.UnitPrice ?? 0,
             ProductName = created.ProductName,
             StatusId = created.StatusId,
@@ -221,7 +221,7 @@ public class SalesCrudService
             Qty = item.Qty ?? 0,
             AdditionalNote = item.AdditionalNote,
             OrderId = item.OrderId,
-            ProductId = item.ProductId,
+            ProductCen = item.ProductCen,
             UnitPrice = item.UnitPrice ?? 0,
             ProductName = item.ProductName,
             StatusId = item.StatusId,

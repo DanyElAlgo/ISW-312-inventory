@@ -9,5 +9,9 @@ public partial class Business
 
     public string? Name { get; set; }
 
+    public string? Cen { get; set; }
+
+    public bool IsActive { get; set; }
+
     public virtual ICollection<Warehouse> Warehouses { get; set; } = new List<Warehouse>();
 }

@@ -90,6 +90,7 @@ public partial class SalesDbContext : DbContext
             entity.Property(e => e.AdditionalNote).HasMaxLength(255).HasColumnName("additional_note");
             entity.Property(e => e.OrderId).HasColumnName("order_id");
             entity.Property(e => e.ProductId).HasColumnName("product_id");
+            entity.Property(e => e.ProductCen).HasMaxLength(64).HasColumnName("product_cen");
             entity.Property(e => e.ProductName).HasMaxLength(255).HasColumnName("product_name");
             entity.Property(e => e.UnitPrice).HasColumnType("numeric(12,2)").HasColumnName("unit_price");
             entity.Property(e => e.Qty).HasColumnName("qty");

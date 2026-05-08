@@ -69,7 +69,7 @@ public class OrderItemGetDto
     public double Qty { get; set; }
     public string? AdditionalNote { get; set; }
     public int? OrderId { get; set; }
-    public int? ProductId { get; set; }
+    public string? ProductCen { get; set; }
     public decimal UnitPrice { get; set; }
     public string? ProductName { get; set; }
     public int? StatusId { get; set; }
@@ -87,8 +87,8 @@ public class OrderItemCreateDto
     [Range(1, int.MaxValue)]
     public int OrderId { get; set; }
 
-    [Range(1, int.MaxValue)]
-    public int ProductId { get; set; }
+    [Required]
+    public string ProductCen { get; set; } = string.Empty;
 
     public int? StatusId { get; set; }
 }
