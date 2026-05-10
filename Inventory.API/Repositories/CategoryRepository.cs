@@ -16,6 +16,7 @@ public class CategoryRepository
     {
         return await _context.Categories
             .Include(c => c.Products)
+            .AsNoTracking()
             .ToListAsync();
     }
 
@@ -23,6 +24,7 @@ public class CategoryRepository
     {
         return await _context.Categories
             .Include(c => c.Products)
+            .AsNoTracking()
             .FirstOrDefaultAsync(c => c.Id == id);
     }
 

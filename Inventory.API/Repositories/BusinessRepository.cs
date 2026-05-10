@@ -16,6 +16,7 @@ public class BusinessRepository
     {
         return await _context.Businesses
             .Include(b => b.Warehouses)
+            .AsNoTracking()
             .ToListAsync();
     }
 
@@ -23,6 +24,7 @@ public class BusinessRepository
     {
         return await _context.Businesses
             .Include(b => b.Warehouses)
+            .AsNoTracking()
             .FirstOrDefaultAsync(b => b.Id == id);
     }
 

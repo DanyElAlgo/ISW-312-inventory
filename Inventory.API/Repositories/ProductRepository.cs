@@ -17,6 +17,7 @@ public class ProductRepository
         return await _context.Products
             .Include(p => p.Category)
             .Include(p => p.Unit)
+            .AsNoTracking()
             .ToListAsync();
     }
 
@@ -25,6 +26,7 @@ public class ProductRepository
         return await _context.Products
             .Include(p => p.Category)
             .Include(p => p.Unit)
+            .AsNoTracking()
             .FirstOrDefaultAsync(p => p.Id == id);
     }
 
@@ -80,6 +82,7 @@ public class ProductRepository
         return await _context.Kardices
             .Where(k => k.ProductId == productId)
             .OrderByDescending(k => k.TimeStamp)
+            .AsNoTracking()
             .ToListAsync();
     }
 
@@ -88,6 +91,7 @@ public class ProductRepository
         return await _context.Kardices
             .Where(k => k.WarehouseId == warehouseId)
             .OrderByDescending(k => k.TimeStamp)
+            .AsNoTracking()
             .ToListAsync();
     }
 
@@ -96,6 +100,7 @@ public class ProductRepository
         return await _context.Kardices
             .Where(k => k.ProductId == productId && k.WarehouseId == warehouseId)
             .OrderByDescending(k => k.TimeStamp)
+            .AsNoTracking()
             .ToListAsync();
     }
     private const int OutOfStockStatusId = 4;

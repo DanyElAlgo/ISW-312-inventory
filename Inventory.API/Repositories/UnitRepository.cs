@@ -16,6 +16,7 @@ public class UnitRepository
     {
         return await _context.Units
             .Include(u => u.Products)
+            .AsNoTracking()
             .ToListAsync();
     }
 
@@ -23,6 +24,7 @@ public class UnitRepository
     {
         return await _context.Units
             .Include(u => u.Products)
+            .AsNoTracking()
             .FirstOrDefaultAsync(u => u.Id == id);
     }
 

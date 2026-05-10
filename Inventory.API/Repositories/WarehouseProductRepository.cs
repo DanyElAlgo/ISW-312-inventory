@@ -18,6 +18,7 @@ public class WarehouseProductRepository
             .Include(wp => wp.Product)
             .Include(wp => wp.Warehouse)
             .Include(wp => wp.Status)
+            .AsNoTracking()
             .ToListAsync();
     }
 
@@ -27,6 +28,7 @@ public class WarehouseProductRepository
             .Include(wp => wp.Product)
             .Include(wp => wp.Warehouse)
             .Include(wp => wp.Status)
+            .AsNoTracking()
             .FirstOrDefaultAsync(wp => wp.Id == id);
     }
 
@@ -37,6 +39,7 @@ public class WarehouseProductRepository
             .Include(wp => wp.Warehouse)
             .Include(wp => wp.Status)
             .Where(wp => wp.WarehouseId == warehouseId)
+            .AsNoTracking()
             .ToListAsync();
     }
 
@@ -47,6 +50,7 @@ public class WarehouseProductRepository
             .Include(wp => wp.Warehouse)
             .Include(wp => wp.Status)
             .Where(wp => wp.ProductId == productId)
+            .AsNoTracking()
             .ToListAsync();
     }
 
@@ -56,6 +60,7 @@ public class WarehouseProductRepository
             .Include(wp => wp.Product)
             .Include(wp => wp.Warehouse)
             .Include(wp => wp.Status)
+            .AsNoTracking()
             .FirstOrDefaultAsync(wp => wp.WarehouseId == warehouseId && wp.ProductId == productId);
     }
 
@@ -106,6 +111,7 @@ public class WarehouseProductRepository
             .Include(wp => wp.Warehouse)
             .Include(wp => wp.Status)
             .Where(wp => wp.StockLeft < wp.LowStockQty)
+            .AsNoTracking()
             .ToListAsync();
     }
 

@@ -17,6 +17,7 @@ public class WarehouseRepository
         return await _context.Warehouses
             .Include(w => w.Business)
             .Include(w => w.WarehouseProducts)
+            .AsNoTracking()
             .ToListAsync();
     }
 
@@ -25,6 +26,7 @@ public class WarehouseRepository
         return await _context.Warehouses
             .Include(w => w.Business)
             .Include(w => w.WarehouseProducts)
+            .AsNoTracking()
             .FirstOrDefaultAsync(w => w.Id == id);
     }
 
@@ -34,6 +36,7 @@ public class WarehouseRepository
             .Include(w => w.Business)
             .Include(w => w.WarehouseProducts)
             .Where(w => w.BusinessId == businessId)
+            .AsNoTracking()
             .ToListAsync();
     }
 

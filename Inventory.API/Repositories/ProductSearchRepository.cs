@@ -25,6 +25,7 @@ public class ProductSearchRepository
             .Include(p => p.Unit)
             .Include(p => p.WarehouseProducts)
             .ThenInclude(wp => wp.Status)
+            .AsNoTracking()
             .AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(searchTerm))
@@ -66,6 +67,7 @@ public class ProductSearchRepository
                 TotalStock = p.WarehouseProducts.Sum(wp => wp.StockLeft ?? 0),
                 LowStockCount = p.WarehouseProducts.Count(wp => wp.StockLeft < wp.LowStockQty)
             })
+            .AsNoTracking()
             .ToListAsync();
 
         return (results, totalCount);
