@@ -1,89 +1,64 @@
-using Microsoft.AspNetCore.Mvc;
-using Inventory.API.DTOs;
+using Inventory.API.DTOs.Contract;
 using Inventory.API.Services;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Inventory.API.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/inventory")]
 public class CategoriesController : ControllerBase
 {
-    private readonly CategoryService _service;
+    private readonly InventoryContractService _service;
 
-    public CategoriesController(CategoryService service)
+    public CategoriesController(InventoryContractService service)
     {
         _service = service;
     }
 
-    [HttpGet]
-    public async Task<ActionResult<IEnumerable<CategoryGetDto>>> GetAll()
+    [HttpGet("companies/{companyCen}/categories")]
+    public async Task<ActionResult<IReadOnlyList<CategoryDto>>> GetCategories(string companyCen)
     {
-        var categories = await _service.GetAllCategoriesAsync();
+        var categories = await _service.GetCategoriesAsync(companyCen);
+        if (categories == null)
+            return NotFound(new { message = "Company not found." });
+
         return Ok(categories);
     }
 
-    [HttpGet("{id}")]
-    public async Task<ActionResult<CategoryGetDto>> GetById(int id)
-    {
-        var category = await _service.GetCategoryByIdAsync(id);
-        if (category == null)
-            return NotFound(new { message = "Category not found" });
-
-        return Ok(category);
-    }
-
-    [HttpPost]
-    public async Task<ActionResult<CategoryGetDto>> Create([FromBody] CategoryCreateDto dto)
+    [HttpPost("companies/{companyCen}/categories")]
+    public async Task<ActionResult<CategoryDto>> CreateCategory(string companyCen, [FromBody] CreateCategoryRequest dto)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
         try
         {
-            var category = await _service.CreateCategoryAsync(dto);
-            return CreatedAtAction(nameof(GetById), new { id = category.Id }, category);
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
-    }
-
-    [HttpPut("{id}")]
-    public async Task<ActionResult<CategoryGetDto>> Update(int id, [FromBody] CategoryUpdateDto dto)
-    {
-        if (!ModelState.IsValid)
-            return BadRequest(ModelState);
-
-        try
-        {
-            var category = await _service.UpdateCategoryAsync(id, dto);
+            var category = await _service.CreateCategoryAsync(companyCen, dto);
             if (category == null)
-                return NotFound(new { message = "Category not found" });
+                return NotFound(new { message = "Company not found." });
 
             return Ok(category);
         }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
         catch (InvalidOperationException ex)
         {
             return BadRequest(new { message = ex.Message });
         }
     }
 
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> Delete(int id)
+    [HttpPut("companies/{companyCen}/categories/{categoryCen}")]
+    public async Task<ActionResult<CategoryDto>> UpdateCategory(string companyCen, string categoryCen, [FromBody] UpdateCategoryRequest dto)
     {
-        var success = await _service.DeleteCategoryAsync(id);
-        if (!success)
-            return NotFound(new { message = "Category not found" });
+        try
+        {
+            var category = await _service.UpdateCategoryAsync(companyCen, categoryCen, dto);
+            if (category == null)
+                return NotFound(new { message = "Category not found." });
 
-        return NoContent();
+            return Ok(category);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 }

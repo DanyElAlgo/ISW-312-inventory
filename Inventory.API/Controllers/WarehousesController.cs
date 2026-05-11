@@ -1,74 +1,64 @@
-using Microsoft.AspNetCore.Mvc;
-using Inventory.API.DTOs;
+using Inventory.API.DTOs.Contract;
 using Inventory.API.Services;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Inventory.API.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/inventory")]
 public class WarehousesController : ControllerBase
 {
-    private readonly WarehouseService _service;
+    private readonly InventoryContractService _service;
 
-    public WarehousesController(WarehouseService service)
+    public WarehousesController(InventoryContractService service)
     {
         _service = service;
     }
 
-    [HttpGet]
-    public async Task<ActionResult<IEnumerable<WarehouseGetDto>>> GetAll()
+    [HttpGet("companies/{companyCen}/warehouses")]
+    public async Task<ActionResult<IReadOnlyList<WarehouseDto>>> GetWarehouses(string companyCen)
     {
-        var warehouses = await _service.GetAllWarehousesAsync();
+        var warehouses = await _service.GetWarehousesAsync(companyCen);
+        if (warehouses == null)
+            return NotFound(new { message = "Company not found." });
+
         return Ok(warehouses);
     }
 
-    [HttpGet("{id}")]
-    public async Task<ActionResult<WarehouseGetDto>> GetById(int id)
-    {
-        var warehouse = await _service.GetWarehouseByIdAsync(id);
-        if (warehouse == null)
-            return NotFound(new { message = "Warehouse not found" });
-
-        return Ok(warehouse);
-    }
-
-    [HttpGet("business/{businessId}")]
-    public async Task<ActionResult<IEnumerable<WarehouseGetDto>>> GetByBusinessId(int businessId)
-    {
-        var warehouses = await _service.GetWarehousesByBusinessIdAsync(businessId);
-        return Ok(warehouses);
-    }
-
-    [HttpPost]
-    public async Task<ActionResult<WarehouseGetDto>> Create([FromBody] WarehouseCreateDto dto)
+    [HttpPost("companies/{companyCen}/warehouses")]
+    public async Task<ActionResult<WarehouseDto>> CreateWarehouse(string companyCen, [FromBody] CreateWarehouseRequest dto)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        var warehouse = await _service.CreateWarehouseAsync(dto);
-        return CreatedAtAction(nameof(GetById), new { id = warehouse.Id }, warehouse);
+        try
+        {
+            var warehouse = await _service.CreateWarehouseAsync(companyCen, dto);
+            if (warehouse == null)
+                return NotFound(new { message = "Company not found." });
+
+            return Ok(warehouse);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
-    [HttpPut("{id}")]
-    public async Task<ActionResult<WarehouseGetDto>> Update(int id, [FromBody] WarehouseUpdateDto dto)
+    [HttpPut("companies/{companyCen}/warehouses/{warehouseCen}")]
+    public async Task<ActionResult<WarehouseDto>> UpdateWarehouse(string companyCen, string warehouseCen, [FromBody] UpdateWarehouseRequest dto)
     {
-        if (!ModelState.IsValid)
-            return BadRequest(ModelState);
+        try
+        {
+            var warehouse = await _service.UpdateWarehouseAsync(companyCen, warehouseCen, dto);
+            if (warehouse == null)
+                return NotFound(new { message = "Warehouse not found." });
 
-        var warehouse = await _service.UpdateWarehouseAsync(id, dto);
-        if (warehouse == null)
-            return NotFound(new { message = "Warehouse not found" });
-
-        return Ok(warehouse);
-    }
-
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> Delete(int id)
-    {
-        var success = await _service.DeleteWarehouseAsync(id);
-        if (!success)
-            return NotFound(new { message = "Warehouse not found" });
-
-        return NoContent();
+            return Ok(warehouse);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 }

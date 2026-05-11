@@ -1,78 +1,74 @@
-using Microsoft.AspNetCore.Mvc;
-using Inventory.API.DTOs;
+using Inventory.API.DTOs.Contract;
 using Inventory.API.Services;
-using Shared.Contracts.DTOs;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Inventory.API.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/inventory")]
 public class ProductsController : ControllerBase
 {
-    private readonly ProductService _service;
-    private readonly ProductSearchService _searchService;
+    private readonly InventoryContractService _service;
 
-    public ProductsController(ProductService service, ProductSearchService searchService)
+    public ProductsController(InventoryContractService service)
     {
         _service = service;
-        _searchService = searchService;
     }
 
-    [HttpGet]
-    public async Task<ActionResult<IEnumerable<ProductGetDto>>> GetAllProducts()
+    [HttpGet("companies/{companyCen}/products")]
+    public async Task<ActionResult<IReadOnlyList<ProductDto>>> GetProducts(
+        string companyCen,
+        [FromQuery] string? search,
+        [FromQuery] string? categoryCen,
+        [FromQuery] string? status)
     {
-        var products = await _service.GetAllProductsAsync();
+        var products = await _service.GetProductsAsync(companyCen, search, categoryCen, status);
+        if (products == null)
+            return NotFound(new { message = "Company or category not found." });
+
         return Ok(products);
     }
 
-    [HttpGet("{id}")]
-    public async Task<ActionResult<ProductGetDto>> GetProductById(int id)
+    [HttpGet("companies/{companyCen}/products/{productCen}")]
+    public async Task<ActionResult<ProductDto>> GetProduct(string companyCen, string productCen)
     {
-        var product = await _service.GetProductByIdAsync(id);
+        var product = await _service.GetProductAsync(companyCen, productCen);
         if (product == null)
-            return NotFound(new { message = "Product not found" });
+            return NotFound(new { message = "Product not found." });
 
         return Ok(product);
     }
 
-    [HttpPost]
-    public async Task<ActionResult<ProductGetDto>> CreateProduct([FromBody] ProductCreateDto dto)
+    [HttpPost("companies/{companyCen}/products")]
+    public async Task<ActionResult<ProductDto>> CreateProduct(string companyCen, [FromBody] CreateProductRequest dto)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
         try
         {
-            var product = await _service.CreateProductAsync(dto);
-            return CreatedAtAction(nameof(GetProductById), new { id = product.Id }, product);
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
-    }
-
-    [HttpPut("{id}")]
-    public async Task<ActionResult<ProductGetDto>> UpdateProduct(int id, [FromBody] ProductUpdateDto dto)
-    {
-        if (!ModelState.IsValid)
-            return BadRequest(ModelState);
-
-        try
-        {
-            var product = await _service.UpdateProductAsync(id, dto);
+            var product = await _service.CreateProductAsync(companyCen, dto);
             if (product == null)
-                return NotFound(new { message = "Product not found" });
+                return NotFound(new { message = "Company not found." });
 
             return Ok(product);
         }
-        catch (ArgumentException ex)
+        catch (InvalidOperationException ex)
         {
             return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpPut("companies/{companyCen}/products/{productCen}")]
+    public async Task<ActionResult<ProductDto>> UpdateProduct(string companyCen, string productCen, [FromBody] UpdateProductRequest dto)
+    {
+        try
+        {
+            var product = await _service.UpdateProductAsync(companyCen, productCen, dto);
+            if (product == null)
+                return NotFound(new { message = "Product not found." });
+
+            return Ok(product);
         }
         catch (InvalidOperationException ex)
         {
@@ -80,52 +76,26 @@ public class ProductsController : ControllerBase
         }
     }
 
-    [HttpPatch("{id}/active")]
-    public async Task<ActionResult<ProductGetDto>> SetProductActiveStatus(int id, [FromBody] ProductActivationDto dto)
+    [HttpPatch("companies/{companyCen}/products/{productCen}/status")]
+    public async Task<ActionResult<ProductDto>> UpdateProductStatus(
+        string companyCen,
+        string productCen,
+        [FromBody] UpdateProductStatusRequest dto)
     {
-        var product = await _service.SetProductActiveStatusAsync(id, dto.IsActive);
-        if (product == null)
-            return NotFound(new { message = "Product not found" });
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
 
-        return Ok(product);
-    }
+        try
+        {
+            var product = await _service.UpdateProductStatusAsync(companyCen, productCen, dto);
+            if (product == null)
+                return NotFound(new { message = "Product not found." });
 
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteProduct(int id)
-    {
-        var success = await _service.DeleteProductAsync(id);
-        if (!success)
-            return NotFound(new { message = "Product not found" });
-
-        return NoContent();
-    }
-
-    [HttpGet("{id}/history")]
-    public async Task<ActionResult<IEnumerable<KardexGetDto>>> GetProductHistory(int id)
-    {
-        var history = await _service.GetProductHistoryAsync(id);
-        return Ok(history);
-    }
-
-    [HttpGet("{id}/reference")]
-    public async Task<ActionResult<ProductReferenceDto>> GetProductReference(int id)
-    {
-        var reference = await _service.GetProductReferenceAsync(id);
-        if (reference == null)
-            return NotFound(new { message = "Product not found" });
-
-        return Ok(reference);
-    }
-
-    [HttpPost("search")]
-    public async Task<ActionResult<PaginatedProductSearchDto>> SearchProducts([FromBody] ProductSearchFilterDto filter)
-    {
-        if (filter.PageNumber < 1)
-            filter.PageNumber = 1;
-        if (filter.PageSize < 1 || filter.PageSize > 100)
-            filter.PageSize = 10;
-
-        var result = await _searchService.SearchProductsAsync(filter);
-        return Ok(result);
+            return Ok(product);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 }

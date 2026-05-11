@@ -1,89 +1,64 @@
-using Microsoft.AspNetCore.Mvc;
-using Inventory.API.DTOs;
+using Inventory.API.DTOs.Contract;
 using Inventory.API.Services;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Inventory.API.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/inventory")]
 public class UnitsController : ControllerBase
 {
-    private readonly UnitService _service;
+    private readonly InventoryContractService _service;
 
-    public UnitsController(UnitService service)
+    public UnitsController(InventoryContractService service)
     {
         _service = service;
     }
 
-    [HttpGet]
-    public async Task<ActionResult<IEnumerable<UnitGetDto>>> GetAll()
+    [HttpGet("companies/{companyCen}/units")]
+    public async Task<ActionResult<IReadOnlyList<UnitDto>>> GetUnits(string companyCen)
     {
-        var units = await _service.GetAllUnitsAsync();
+        var units = await _service.GetUnitsAsync(companyCen);
+        if (units == null)
+            return NotFound(new { message = "Company not found." });
+
         return Ok(units);
     }
 
-    [HttpGet("{id}")]
-    public async Task<ActionResult<UnitGetDto>> GetById(int id)
-    {
-        var unit = await _service.GetUnitByIdAsync(id);
-        if (unit == null)
-            return NotFound(new { message = "Unit not found" });
-
-        return Ok(unit);
-    }
-
-    [HttpPost]
-    public async Task<ActionResult<UnitGetDto>> Create([FromBody] UnitCreateDto dto)
+    [HttpPost("companies/{companyCen}/units")]
+    public async Task<ActionResult<UnitDto>> CreateUnit(string companyCen, [FromBody] CreateUnitRequest dto)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
         try
         {
-            var unit = await _service.CreateUnitAsync(dto);
-            return CreatedAtAction(nameof(GetById), new { id = unit.Id }, unit);
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
-    }
-
-    [HttpPut("{id}")]
-    public async Task<ActionResult<UnitGetDto>> Update(int id, [FromBody] UnitUpdateDto dto)
-    {
-        if (!ModelState.IsValid)
-            return BadRequest(ModelState);
-
-        try
-        {
-            var unit = await _service.UpdateUnitAsync(id, dto);
+            var unit = await _service.CreateUnitAsync(companyCen, dto);
             if (unit == null)
-                return NotFound(new { message = "Unit not found" });
+                return NotFound(new { message = "Company not found." });
 
             return Ok(unit);
         }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
         catch (InvalidOperationException ex)
         {
             return BadRequest(new { message = ex.Message });
         }
     }
 
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> Delete(int id)
+    [HttpPut("companies/{companyCen}/units/{unitCen}")]
+    public async Task<ActionResult<UnitDto>> UpdateUnit(string companyCen, string unitCen, [FromBody] UpdateUnitRequest dto)
     {
-        var success = await _service.DeleteUnitAsync(id);
-        if (!success)
-            return NotFound(new { message = "Unit not found" });
+        try
+        {
+            var unit = await _service.UpdateUnitAsync(companyCen, unitCen, dto);
+            if (unit == null)
+                return NotFound(new { message = "Unit not found." });
 
-        return NoContent();
+            return Ok(unit);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 }

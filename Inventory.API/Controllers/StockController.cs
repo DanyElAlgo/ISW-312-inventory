@@ -1,99 +1,99 @@
-using Microsoft.AspNetCore.Mvc;
-using Inventory.API.DTOs;
+using Inventory.API.DTOs.Contract;
 using Inventory.API.Services;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Inventory.API.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/inventory")]
 public class StockController : ControllerBase
 {
-    private readonly ProductService _service;
-    private readonly WarehouseProductService _warehouseProductService;
+    private readonly InventoryContractService _service;
 
-    public StockController(ProductService service, WarehouseProductService warehouseProductService)
+    public StockController(InventoryContractService service)
     {
         _service = service;
-        _warehouseProductService = warehouseProductService;
     }
 
-    [HttpGet("warehouse/{warehouseId}/history")]
-    public async Task<ActionResult<IEnumerable<KardexGetDto>>> GetWarehouseHistory(int warehouseId)
+    [HttpGet("companies/{companyCen}/stock")]
+    public async Task<ActionResult<IReadOnlyList<StockItemDto>>> GetStock(
+        string companyCen,
+        [FromQuery] string? productCen,
+        [FromQuery] string? warehouseCen)
     {
-        var history = await _service.GetWarehouseHistoryAsync(warehouseId);
-        return Ok(history);
+        var stock = await _service.GetStockAsync(companyCen, productCen, warehouseCen);
+        if (stock == null)
+            return NotFound(new { message = "Company, product, or warehouse not found." });
+
+        return Ok(stock);
     }
 
-    [HttpGet("product/{productId}/warehouse/{warehouseId}/history")]
-    public async Task<ActionResult<IEnumerable<KardexGetDto>>> GetProductWarehouseHistory(int productId, int warehouseId)
-    {
-        var history = await _service.GetProductWarehouseHistoryAsync(productId, warehouseId);
-        return Ok(history);
-    }
-
-    [HttpGet("product/{productId}/history")]
-    public async Task<ActionResult<IEnumerable<KardexGetDto>>> GetProductHistory(int productId)
-    {
-        var history = await _service.GetProductHistoryAsync(productId);
-        return Ok(history);
-    }
-
-    [HttpPost("initial")]
-    public async Task<ActionResult<StockOperationResultDto>> SetInitialStock([FromBody] StockSetDto dto)
+    [HttpPost("companies/{companyCen}/stock/adjustments")]
+    public async Task<ActionResult<StockAdjustmentResponse>> CreateAdjustment(
+        string companyCen,
+        [FromBody] StockAdjustmentRequest dto)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        var result = await _warehouseProductService.SetInitialStockAsync(dto);
-        if (!result.Success)
-            return BadRequest(result);
+        try
+        {
+            var result = await _service.CreateAdjustmentAsync(companyCen, dto);
+            if (result == null)
+                return NotFound(new { message = "Company or warehouse not found." });
 
-        return Ok(result);
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
-    [HttpPost("adjust")]
-    public async Task<ActionResult<StockOperationResultDto>> AdjustStock([FromBody] StockChangeDto dto)
+    [HttpPost("companies/{companyCen}/stock/validate")]
+    public async Task<ActionResult<StockValidationResponse>> ValidateStock(
+        string companyCen,
+        [FromBody] StockValidationRequest dto)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        var result = await _warehouseProductService.AdjustStockAsync(dto);
-        if (!result.Success)
-            return BadRequest(result);
+        try
+        {
+            var result = await _service.ValidateStockAsync(companyCen, dto);
+            if (result == null)
+                return NotFound(new { message = "Company or warehouse not found." });
 
-        return Ok(result);
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
-    [HttpPatch("warehouse/{warehouseId}/product/{productId}/out-of-stock")]
-    public async Task<ActionResult<StockOperationResultDto>> SetOutOfStockStatus(int warehouseId, int productId, [FromBody] OutOfStockUpdateDto dto)
-    {
-        var result = await _warehouseProductService.SetOutOfStockAsync(warehouseId, productId, dto.IsOutOfStock);
-        if (!result.Success)
-            return NotFound(result);
-
-        return Ok(result);
-    }
-
-    [HttpPost("bulk-validate")]
-    public async Task<ActionResult<BulkStockCheckResultDto>> BulkValidate([FromBody] BulkStockCheckDto dto)
-    {
-        if (!ModelState.IsValid)
-            return BadRequest(ModelState);
-
-        var result = await _warehouseProductService.ValidateBulkStockAsync(dto);
-        return Ok(result);
-    }
-
-    [HttpPost("bulk-deduct")]
-    public async Task<ActionResult<BulkStockDeductResultDto>> BulkDeduct([FromBody] BulkStockDeductDto dto)
+    [HttpPost("companies/{companyCen}/stock/consume")]
+    public async Task<ActionResult<StockConsumeResponse>> ConsumeStock(
+        string companyCen,
+        [FromBody] StockConsumeRequest dto)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        var result = await _warehouseProductService.DeductBulkStockAsync(dto);
-        if (!result.Success)
-            return BadRequest(result);
+        try
+        {
+            var result = await _service.ConsumeStockAsync(companyCen, dto);
+            if (result == null)
+                return NotFound(new { message = "Company or warehouse not found." });
 
-        return Ok(result);
+            if (!result.Success)
+                return Conflict(result);
+
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 }
