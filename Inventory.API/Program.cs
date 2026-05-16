@@ -57,4 +57,4 @@ if (enableSwagger)
 app.UseCors("AllowAll");
 app.MapControllers();
 
-app.Run();
+app.Run("http://0.0.0.0:5001");

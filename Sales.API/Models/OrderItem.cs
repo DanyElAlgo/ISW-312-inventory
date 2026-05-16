@@ -20,6 +20,10 @@ public partial class OrderItem
 
     public int? StatusId { get; set; }
 
+    public DateTime? SentAt { get; set; }
+
+    public int ResendCount { get; set; }
+
     public virtual ICollection<CommandItem> CommandItems { get; set; } = new List<CommandItem>();
 
     public virtual OrderTicket? Order { get; set; }

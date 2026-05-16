@@ -72,6 +72,16 @@ public partial class SalesDbContext : DbContext
                 .HasColumnType("numeric(7,4)")
                 .HasDefaultValue(0m)
                 .HasColumnName("tax_rate_snapshot");
+            entity.Property(e => e.CreatedAt)
+                .HasColumnType("timestamp without time zone")
+                .HasDefaultValueSql("NOW()")
+                .HasColumnName("created_at");
+            entity.Property(e => e.DailyNumber)
+                .HasDefaultValue(0)
+                .HasColumnName("daily_number");
+            entity.Property(e => e.CancellationReason)
+                .HasMaxLength(500)
+                .HasColumnName("cancellation_reason");
 
             entity.HasOne(d => d.Customer).WithMany(p => p.OrderTickets)
                 .HasForeignKey(d => d.CustomerId)
@@ -95,6 +105,12 @@ public partial class SalesDbContext : DbContext
             entity.Property(e => e.UnitPrice).HasColumnType("numeric(12,2)").HasColumnName("unit_price");
             entity.Property(e => e.Qty).HasColumnName("qty");
             entity.Property(e => e.StatusId).HasColumnName("status_id");
+            entity.Property(e => e.SentAt)
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("sent_at");
+            entity.Property(e => e.ResendCount)
+                .HasDefaultValue(0)
+                .HasColumnName("resend_count");
 
             entity.HasOne(d => d.Order).WithMany(p => p.OrderItems)
                 .HasForeignKey(d => d.OrderId)
@@ -167,6 +183,8 @@ public partial class SalesDbContext : DbContext
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.Description).HasMaxLength(255).HasColumnName("description");
             entity.Property(e => e.Name).HasMaxLength(255).HasColumnName("name");
+            entity.Property(e => e.Code).HasMaxLength(64).HasColumnName("code");
+            entity.Property(e => e.IsActive).HasDefaultValue(true).HasColumnName("is_active");
         });
 
         modelBuilder.Entity<StationType>(entity =>

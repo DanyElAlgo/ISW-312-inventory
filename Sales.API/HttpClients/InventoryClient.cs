@@ -52,6 +52,42 @@ public class InventoryClient
         }
     }
 
+    public async Task<List<InventoryProductListItemDto>?> GetProductsAsync(
+        string companyCen,
+        string? search,
+        string? categoryCen,
+        string? warehouseCen,
+        bool onlyAvailable,
+        int page,
+        int pageSize)
+    {
+        try
+        {
+            var query = new List<string>();
+            if (!string.IsNullOrWhiteSpace(search))
+                query.Add($"search={Uri.EscapeDataString(search)}");
+            if (!string.IsNullOrWhiteSpace(categoryCen))
+                query.Add($"categoryCen={Uri.EscapeDataString(categoryCen)}");
+            if (!string.IsNullOrWhiteSpace(warehouseCen))
+                query.Add($"warehouseCen={Uri.EscapeDataString(warehouseCen)}");
+            query.Add($"onlyAvailable={onlyAvailable.ToString().ToLower()}");
+            query.Add($"page={page}");
+            query.Add($"pageSize={pageSize}");
+
+            var queryString = $"?{string.Join("&", query)}";
+            var response = await _http.GetAsync($"api/inventory/companies/{companyCen}/products{queryString}");
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                return null;
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadFromJsonAsync<List<InventoryProductListItemDto>>();
+        }
+        catch (HttpRequestException)
+        {
+            throw new InvalidOperationException(
+                "Inventory service is unavailable. Cannot fetch product catalog at this time.");
+        }
+    }
+
     public async Task<StockValidationResponse?> ValidateStockAsync(string companyCen, StockValidationRequest dto)
     {
         try

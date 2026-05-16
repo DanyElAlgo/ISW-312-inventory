@@ -10,5 +10,9 @@ public partial class PaymentType
 
     public string? Description { get; set; }
 
+    public string? Code { get; set; }
+
+    public bool IsActive { get; set; } = true;
+
     public virtual ICollection<Payment> Payments { get; set; } = new List<Payment>();
 }

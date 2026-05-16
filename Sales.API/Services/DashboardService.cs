@@ -140,4 +140,89 @@ public class DashboardService
 
         return summary;
     }
+
+    // ── Contract-compliant methods ─────────────────────────────────────────────
+
+    public async Task<DailySalesDashboardDto> GetDailySalesDashboardAsync()
+    {
+        var todayUtc = DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Unspecified);
+        var tomorrowUtc = todayUtc.AddDays(1);
+
+        var paidTicketIds = await _context.Payments
+            .Where(p => p.PaidAt >= todayUtc && p.PaidAt < tomorrowUtc && p.OrderId.HasValue)
+            .Select(p => p.OrderId!.Value)
+            .Distinct()
+            .ToListAsync();
+
+        if (paidTicketIds.Count == 0)
+            return new DailySalesDashboardDto();
+
+        var tickets = await _context.OrderTickets
+            .Include(t => t.OrderItems)
+            .Where(t => paidTicketIds.Contains(t.Id))
+            .ToListAsync();
+
+        var totals = tickets.Select(t =>
+        {
+            var sub = t.OrderItems.Sum(i => (i.UnitPrice ?? 0) * (decimal)(i.Qty ?? 0));
+            return sub + sub * (t.TaxRateSnapshot ?? 0);
+        }).ToList();
+
+        var totalSales = totals.Sum();
+        var count = totals.Count;
+
+        return new DailySalesDashboardDto
+        {
+            TotalSales = totalSales,
+            TicketsCount = count,
+            AverageTicket = count > 0 ? totalSales / count : 0
+        };
+    }
+
+    public async Task<List<TopProductDashboardContractResponse>> GetTopProductsDashboardAsync(int topN = 10)
+    {
+        var paidTicketIds = await _context.Payments
+            .Where(p => p.OrderId.HasValue)
+            .Select(p => p.OrderId!.Value)
+            .Distinct()
+            .ToListAsync();
+
+        if (paidTicketIds.Count == 0)
+            return new List<TopProductDashboardContractResponse>();
+
+        return await _context.OrderItems
+            .Where(i => i.OrderId.HasValue && paidTicketIds.Contains(i.OrderId.Value) && !string.IsNullOrWhiteSpace(i.ProductCen))
+            .GroupBy(i => new { i.ProductCen, i.ProductName, i.UnitPrice })
+            .Select(g => new TopProductDashboardContractResponse
+            {
+                ProductCen = g.Key.ProductCen,
+                ProductName = g.Key.ProductName ?? string.Empty,
+                TotalQuantity = (int)g.Sum(i => i.Qty ?? 0),
+                SalePrice = g.Key.UnitPrice ?? 0
+            })
+            .OrderByDescending(p => p.TotalQuantity)
+            .Take(topN)
+            .ToListAsync();
+    }
+
+    public async Task<KdsStatusDashboardDto> GetKdsStatusDashboardAsync()
+    {
+        var items = await _context.CommandItems
+            .Include(ci => ci.OrderItem).ThenInclude(oi => oi!.Status)
+            .Where(ci => ci.OrderItem != null)
+            .ToListAsync();
+
+        var dto = new KdsStatusDashboardDto();
+        foreach (var ci in items)
+        {
+            var statusName = ci.OrderItem?.Status?.Name?.ToLower() ?? "pending";
+            if (statusName is "pending" or "pendiente")
+                dto.PendingCount++;
+            else if (statusName is "en preparacion" or "en preparación" or "in preparation")
+                dto.PreparingCount++;
+            else if (statusName is "listo" or "ready")
+                dto.ReadyCount++;
+        }
+        return dto;
+    }
 }

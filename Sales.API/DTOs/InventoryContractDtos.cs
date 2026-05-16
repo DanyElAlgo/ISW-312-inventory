@@ -12,6 +12,18 @@ public sealed class InventoryProductDto
     public string? StationCode { get; set; }
 }
 
+public sealed class InventoryProductListItemDto
+{
+    public string ProductCen { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public string? CategoryCen { get; set; }
+    public string? CategoryName { get; set; }
+    public decimal SalePrice { get; set; }
+    public decimal AvailableQuantity { get; set; }
+    public string Status { get; set; } = string.Empty;
+    public string? StationCode { get; set; }
+}
+
 public sealed class InventoryStockItemDto
 {
     public string ProductCen { get; set; } = string.Empty;

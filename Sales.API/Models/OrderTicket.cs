@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Sales.API.Models;
+﻿namespace Sales.API.Models;
 
 public partial class OrderTicket
 {
@@ -11,6 +9,12 @@ public partial class OrderTicket
     public int? StatusId { get; set; }
 
     public decimal? TaxRateSnapshot { get; set; }
+
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    public int DailyNumber { get; set; }
+
+    public string? CancellationReason { get; set; }
 
     public virtual Customer? Customer { get; set; }
 
