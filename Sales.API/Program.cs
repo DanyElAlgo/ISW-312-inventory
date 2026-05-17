@@ -2,6 +2,8 @@ using System.Globalization;
 using Microsoft.EntityFrameworkCore;
 using Sales.API.HttpClients;
 using Sales.API.Models;
+using Sales.API.Repositories.Ef;
+using Sales.API.Repositories.Interfaces;
 using Sales.API.Services;
 
 CultureInfo culture = new("en-US");
@@ -23,10 +25,31 @@ builder.Services.AddHttpClient<InventoryClient>(client =>
 builder.Services.Configure<InventoryIntegrationOptions>(
     builder.Configuration.GetSection("InventoryIntegration"));
 
-builder.Services.AddScoped<PosService>();
-builder.Services.AddScoped<SalesCrudService>();
+// Repositories
+builder.Services.AddScoped<IOrderTicketRepository, OrderTicketRepository>();
+builder.Services.AddScoped<IOrderItemRepository, OrderItemRepository>();
+builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+builder.Services.AddScoped<IPaymentTypeRepository, PaymentTypeRepository>();
+builder.Services.AddScoped<IOrderStatusRepository, OrderStatusRepository>();
+builder.Services.AddScoped<IStationRepository, StationRepository>();
+builder.Services.AddScoped<IStationTypeRepository, StationTypeRepository>();
+builder.Services.AddScoped<IWaiterRepository, WaiterRepository>();
+builder.Services.AddScoped<IGlobalTaxConfigRepository, GlobalTaxConfigRepository>();
+builder.Services.AddScoped<IOrderCommandRepository, OrderCommandRepository>();
+builder.Services.AddScoped<ICommandItemRepository, CommandItemRepository>();
+builder.Services.AddScoped<ISalesUnitOfWork, SalesUnitOfWork>();
+
+// Per-entity services
+builder.Services.AddScoped<OrderStatusesService>();
+builder.Services.AddScoped<WaitersService>();
+builder.Services.AddScoped<PaymentMethodsService>();
+builder.Services.AddScoped<TaxConfigurationService>();
+builder.Services.AddScoped<CatalogService>();
+builder.Services.AddScoped<OrderTicketsService>();
+builder.Services.AddScoped<OrderItemsService>();
+builder.Services.AddScoped<KdsService>();
+builder.Services.AddScoped<PaymentsService>();
 builder.Services.AddScoped<DashboardService>();
-builder.Services.AddScoped<StationManagementService>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();

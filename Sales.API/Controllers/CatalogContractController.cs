@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Sales.API.DTOs;
-using Sales.API.HttpClients;
-using Microsoft.Extensions.Options;
+using Sales.API.Services;
 
 namespace Sales.API.Controllers;
 
@@ -9,23 +8,14 @@ namespace Sales.API.Controllers;
 [Tags("CatalogContract")]
 public class CatalogContractController : ControllerBase
 {
-    private readonly InventoryClient _inventoryClient;
-    private readonly InventoryIntegrationOptions _options;
+    private readonly CatalogService _catalogService;
 
-    public CatalogContractController(
-        InventoryClient inventoryClient,
-        IOptions<InventoryIntegrationOptions> options)
+    public CatalogContractController(CatalogService catalogService)
     {
-        _inventoryClient = inventoryClient;
-        _options = options.Value;
+        _catalogService = catalogService;
     }
 
     /// <summary>Lista productos vendibles para ventas</summary>
-    /// <remarks>
-    /// Devuelve productos disponibles para venta en la empresa indicada.
-    /// Usar para catalogos POS y seleccion de items al crear tickets.
-    /// Integra con el API de Inventario para obtener productos vendibles.
-    /// </remarks>
     [HttpGet("api/sales/companies/{companyCen}/catalog/products")]
     [ProducesResponseType(typeof(List<SellableProductContractDto>), 200)]
     [ProducesResponseType(400)]
@@ -42,24 +32,12 @@ public class CatalogContractController : ControllerBase
         if (page < 1 || pageSize < 1)
             return BadRequest("page and pageSize must be >= 1.");
 
-        var products = await _inventoryClient.GetProductsAsync(
+        var products = await _catalogService.GetSellableProductsAsync(
             companyCen, search, categoryCen, warehouseCen, onlyAvailable, page, pageSize);
 
         if (products == null)
             return NotFound();
 
-        var result = products.Select(p => new SellableProductContractDto
-        {
-            ProductCen = p.ProductCen,
-            Name = p.Name,
-            CategoryCen = p.CategoryCen ?? string.Empty,
-            CategoryName = p.CategoryName ?? string.Empty,
-            SalePrice = p.SalePrice,
-            AvailableQuantity = (double)p.AvailableQuantity,
-            IsAvailable = p.Status.ToUpperInvariant() is not ("INACTIVE" or "OUT_OF_STOCK"),
-            StationCode = p.StationCode
-        }).ToList();
-
-        return Ok(result);
+        return Ok(products);
     }
 }

@@ -8,21 +8,20 @@ namespace Sales.API.Controllers;
 [Tags("WaitersContract")]
 public class WaitersContractController : ControllerBase
 {
-    private readonly PosService _posService;
+    private readonly WaitersService _waitersService;
 
-    public WaitersContractController(PosService posService)
+    public WaitersContractController(WaitersService waitersService)
     {
-        _posService = posService;
+        _waitersService = waitersService;
     }
 
     /// <summary>Lista meseros por empresa</summary>
-    /// <remarks>Devuelve las opciones de meseros disponibles para la empresa. Usar para asignar meseros en tickets.</remarks>
     [HttpGet("api/sales/companies/{companyCen}/waiters")]
     [ProducesResponseType(typeof(List<WaiterContractResponse>), 200)]
     [ProducesResponseType(404)]
     public async Task<IActionResult> GetWaiters(string companyCen)
     {
-        var waiters = await _posService.GetWaitersAsync();
+        var waiters = await _waitersService.GetWaitersAsync();
         if (!waiters.Any())
             return NotFound();
         return Ok(waiters);

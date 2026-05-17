@@ -8,11 +8,15 @@ namespace Inventory.API.Controllers;
 [Route("api/inventory")]
 public class DocumentsController : ControllerBase
 {
-    private readonly InventoryContractService _service;
+    private readonly DocumentsService _documentsService;
+    private readonly StockValidationService _validationService;
 
-    public DocumentsController(InventoryContractService service)
+    public DocumentsController(
+        DocumentsService documentsService,
+        StockValidationService validationService)
     {
-        _service = service;
+        _documentsService = documentsService;
+        _validationService = validationService;
     }
 
     [HttpPost("companies/{companyCen}/documents")]
@@ -25,7 +29,7 @@ public class DocumentsController : ControllerBase
 
         try
         {
-            var result = await _service.CreateDocumentAsync(companyCen, dto);
+            var result = await _documentsService.CreateDocumentAsync(companyCen, dto);
             if (result == null)
                 return NotFound(new { message = "Company or warehouse not found." });
 
@@ -33,7 +37,7 @@ public class DocumentsController : ControllerBase
         }
         catch (InvalidOperationException ex) when (ex.Message == "INSUFFICIENT_STOCK")
         {
-            var validation = await _service.ValidateStockAsync(companyCen, new StockValidationRequest
+            var validation = await _validationService.ValidateStockAsync(companyCen, new StockValidationRequest
             {
                 WarehouseCen = dto.WarehouseCen,
                 Source = "DOCUMENT",
@@ -64,7 +68,7 @@ public class DocumentsController : ControllerBase
         [FromQuery] DateTime? from,
         [FromQuery] DateTime? to)
     {
-        var documents = await _service.GetDocumentsAsync(companyCen, documentType, from, to);
+        var documents = await _documentsService.GetDocumentsAsync(companyCen, documentType, from, to);
         if (documents == null)
             return NotFound(new { message = "Company not found." });
 

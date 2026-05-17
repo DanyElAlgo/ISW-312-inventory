@@ -8,9 +8,9 @@ namespace Inventory.API.Controllers;
 [Route("api/inventory")]
 public class ProductsController : ControllerBase
 {
-    private readonly InventoryContractService _service;
+    private readonly ProductsService _service;
 
-    public ProductsController(InventoryContractService service)
+    public ProductsController(ProductsService service)
     {
         _service = service;
     }
@@ -74,6 +74,25 @@ public class ProductsController : ControllerBase
         {
             return BadRequest(new { message = ex.Message });
         }
+    }
+
+    [HttpGet("companies/{companyCen}/sellable-products")]
+    public async Task<ActionResult<IReadOnlyList<SellableProductDto>>> GetSellableProducts(
+        string companyCen,
+        [FromQuery] string? search,
+        [FromQuery] string? categoryCen,
+        [FromQuery] string? warehouseCen,
+        [FromQuery] bool onlyAvailable = true,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 50)
+    {
+        var products = await _service.GetSellableProductsAsync(
+            companyCen, search, categoryCen, warehouseCen, onlyAvailable, page, pageSize);
+
+        if (products == null)
+            return NotFound(new { message = "Company, category, or warehouse not found." });
+
+        return Ok(products);
     }
 
     [HttpPatch("companies/{companyCen}/products/{productCen}/status")]

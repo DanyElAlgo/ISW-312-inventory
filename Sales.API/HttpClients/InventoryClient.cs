@@ -52,7 +52,7 @@ public class InventoryClient
         }
     }
 
-    public async Task<List<InventoryProductListItemDto>?> GetProductsAsync(
+    public async Task<List<InventorySellableProductDto>?> GetSellableProductsAsync(
         string companyCen,
         string? search,
         string? categoryCen,
@@ -75,11 +75,11 @@ public class InventoryClient
             query.Add($"pageSize={pageSize}");
 
             var queryString = $"?{string.Join("&", query)}";
-            var response = await _http.GetAsync($"api/inventory/companies/{companyCen}/products{queryString}");
+            var response = await _http.GetAsync($"api/inventory/companies/{companyCen}/sellable-products{queryString}");
             if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
                 return null;
             response.EnsureSuccessStatusCode();
-            return await response.Content.ReadFromJsonAsync<List<InventoryProductListItemDto>>();
+            return await response.Content.ReadFromJsonAsync<List<InventorySellableProductDto>>();
         }
         catch (HttpRequestException)
         {

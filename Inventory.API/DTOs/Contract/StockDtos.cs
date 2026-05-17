@@ -177,3 +177,26 @@ public sealed class StockConsumeResponse
     public IReadOnlyList<string> GeneratedMovementCens { get; init; } = [];
     public IReadOnlyList<StockRequirementDto> Requirements { get; init; } = [];
 }
+
+public sealed class StockIncreaseRequest
+{
+    [Required]
+    public required string WarehouseCen { get; init; }
+
+    [Required]
+    public required string Source { get; init; }
+
+    public string? ReferenceCen { get; init; }
+
+    public string? Reason { get; init; }
+
+    [Required]
+    public required IReadOnlyList<StockValidationItemDto> Items { get; init; }
+}
+
+public sealed class StockIncreaseResponse
+{
+    public required string DocumentCen { get; init; }
+    public required string DocumentType { get; init; }
+    public IReadOnlyList<string> GeneratedMovementCens { get; init; } = [];
+}

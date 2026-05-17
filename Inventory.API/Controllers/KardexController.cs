@@ -8,9 +8,9 @@ namespace Inventory.API.Controllers;
 [Route("api/inventory")]
 public class KardexController : ControllerBase
 {
-    private readonly InventoryContractService _service;
+    private readonly KardexService _service;
 
-    public KardexController(InventoryContractService service)
+    public KardexController(KardexService service)
     {
         _service = service;
     }

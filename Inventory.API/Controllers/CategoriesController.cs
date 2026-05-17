@@ -8,9 +8,9 @@ namespace Inventory.API.Controllers;
 [Route("api/inventory")]
 public class CategoriesController : ControllerBase
 {
-    private readonly InventoryContractService _service;
+    private readonly CategoriesService _service;
 
-    public CategoriesController(InventoryContractService service)
+    public CategoriesController(CategoriesService service)
     {
         _service = service;
     }

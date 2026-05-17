@@ -8,26 +8,31 @@ namespace Sales.API.Controllers;
 [Tags("TicketsContract")]
 public class TicketsContractController : ControllerBase
 {
-    private readonly PosService _posService;
+    private readonly OrderTicketsService _ticketsService;
+    private readonly OrderItemsService _itemsService;
+    private readonly KdsService _kdsService;
 
-    public TicketsContractController(PosService posService)
+    public TicketsContractController(
+        OrderTicketsService ticketsService,
+        OrderItemsService itemsService,
+        KdsService kdsService)
     {
-        _posService = posService;
+        _ticketsService = ticketsService;
+        _itemsService = itemsService;
+        _kdsService = kdsService;
     }
 
     /// <summary>Lista tickets del dia</summary>
-    /// <remarks>Devuelve los tickets activos del dia actual. Usar para paneles de operacion o historico corto.</remarks>
     [HttpGet("api/sales/companies/{companyCen}/tickets")]
     [ProducesResponseType(typeof(List<TicketContractResponse>), 200)]
     [ProducesResponseType(404)]
     public async Task<IActionResult> GetTickets(string companyCen)
     {
-        var result = await _posService.GetTicketsAsync(companyCen);
+        var result = await _ticketsService.GetTicketsAsync(companyCen);
         return Ok(result);
     }
 
     /// <summary>Crea un ticket</summary>
-    /// <remarks>Abre un ticket para una nueva orden en la empresa. Usar al iniciar una atencion de mesa o pedido.</remarks>
     [HttpPost("api/sales/companies/{companyCen}/tickets")]
     [ProducesResponseType(typeof(TicketContractResponse), 201)]
     [ProducesResponseType(404)]
@@ -35,7 +40,7 @@ public class TicketsContractController : ControllerBase
         string companyCen,
         [FromBody] CreateTicketContractRequest request)
     {
-        var result = await _posService.CreateTicketContractAsync(companyCen, request);
+        var result = await _ticketsService.CreateTicketAsync(companyCen, request);
         if (result == null)
             return NotFound();
 
@@ -43,28 +48,18 @@ public class TicketsContractController : ControllerBase
     }
 
     /// <summary>Lista items de un ticket</summary>
-    /// <remarks>
-    /// Devuelve los items asociados a un ticket.
-    /// Usar para ver detalle de productos y cantidades.
-    /// Integra con el API de Inventario para enriquecer datos de producto.
-    /// </remarks>
     [HttpGet("api/sales/companies/{companyCen}/tickets/{ticketCen}/items")]
     [ProducesResponseType(typeof(List<TicketItemContractResponse>), 200)]
     [ProducesResponseType(404)]
     public async Task<IActionResult> GetTicketItems(string companyCen, string ticketCen)
     {
-        var result = await _posService.GetTicketItemsContractAsync(ticketCen);
+        var result = await _itemsService.GetItemsAsync(ticketCen);
         if (result == null)
             return NotFound();
         return Ok(result);
     }
 
     /// <summary>Agrega un item a un ticket</summary>
-    /// <remarks>
-    /// Crea un nuevo item dentro del ticket con producto y cantidad.
-    /// Usar para registrar pedidos de clientes.
-    /// Integra con el API de Inventario para enriquecer datos de producto.
-    /// </remarks>
     [HttpPost("api/sales/companies/{companyCen}/tickets/{ticketCen}/items")]
     [ProducesResponseType(typeof(TicketItemContractResponse), 201)]
     [ProducesResponseType(400)]
@@ -82,7 +77,7 @@ public class TicketsContractController : ControllerBase
 
         try
         {
-            var result = await _posService.AddTicketItemContractAsync(ticketCen, request);
+            var result = await _itemsService.AddItemAsync(ticketCen, request);
             if (result == null)
                 return NotFound();
             return CreatedAtAction(nameof(GetTicketItems), new { companyCen, ticketCen }, result);
@@ -94,11 +89,6 @@ public class TicketsContractController : ControllerBase
     }
 
     /// <summary>Actualiza un item de ticket</summary>
-    /// <remarks>
-    /// Modifica cantidad o nota del item en el ticket.
-    /// Usar para ajustes solicitados por el cliente.
-    /// Integra con el API de Inventario para enriquecer datos de producto.
-    /// </remarks>
     [HttpPatch("api/sales/companies/{companyCen}/tickets/{ticketCen}/items/{ticketItemCen}")]
     [ProducesResponseType(typeof(TicketItemContractResponse), 200)]
     [ProducesResponseType(404)]
@@ -108,18 +98,13 @@ public class TicketsContractController : ControllerBase
         string ticketItemCen,
         [FromBody] UpdateTicketItemContractRequest request)
     {
-        var result = await _posService.UpdateTicketItemContractAsync(ticketCen, ticketItemCen, request);
+        var result = await _itemsService.UpdateItemAsync(ticketCen, ticketItemCen, request);
         if (result == null)
             return NotFound();
         return Ok(result);
     }
 
     /// <summary>Reenvia un item a cocina</summary>
-    /// <remarks>
-    /// Marca un item para reenvio en el flujo de cocina.
-    /// Usar cuando un item debe prepararse nuevamente.
-    /// Integra con el API de Inventario para enriquecer datos de producto.
-    /// </remarks>
     [HttpPost("api/sales/companies/{companyCen}/tickets/{ticketCen}/items/{ticketItemCen}/resend")]
     [ProducesResponseType(typeof(TicketItemContractResponse), 200)]
     [ProducesResponseType(404)]
@@ -128,18 +113,13 @@ public class TicketsContractController : ControllerBase
         string ticketCen,
         string ticketItemCen)
     {
-        var result = await _posService.ResendTicketItemAsync(ticketCen, ticketItemCen);
+        var result = await _itemsService.ResendItemAsync(ticketCen, ticketItemCen);
         if (result == null)
             return NotFound();
         return Ok(result);
     }
 
     /// <summary>Envia un ticket a cocina</summary>
-    /// <remarks>
-    /// Cambia el estado del ticket para iniciar preparacion.
-    /// Usar cuando el pedido esta listo para cocina.
-    /// Integra con el API de Inventario para enriquecer datos de producto.
-    /// </remarks>
     [HttpPost("api/sales/companies/{companyCen}/tickets/{ticketCen}/send")]
     [ProducesResponseType(typeof(List<TicketItemContractResponse>), 200)]
     [ProducesResponseType(404)]
@@ -147,7 +127,9 @@ public class TicketsContractController : ControllerBase
     {
         try
         {
-            var result = await _posService.SendTicketToKitchenContractAsync(companyCen, ticketCen);
+            var result = await _ticketsService.SendTicketToKitchenAsync(
+                ticketCen,
+                _kdsService.ResolveStationForProductAsync);
             if (result == null)
                 return NotFound();
             return Ok(result);
@@ -159,7 +141,6 @@ public class TicketsContractController : ControllerBase
     }
 
     /// <summary>Asigna mesero a un ticket</summary>
-    /// <remarks>Asocia un mesero al ticket abierto. Usar cuando se reasigna la atencion de la mesa.</remarks>
     [HttpPut("api/sales/companies/{companyCen}/tickets/{ticketCen}/waiter")]
     [ProducesResponseType(typeof(AssignTicketWaiterContractResponse), 200)]
     [ProducesResponseType(400)]
@@ -174,7 +155,7 @@ public class TicketsContractController : ControllerBase
 
         try
         {
-            var result = await _posService.AssignTicketWaiterContractAsync(ticketCen, request);
+            var result = await _ticketsService.AssignWaiterAsync(ticketCen, request);
             if (result == null)
                 return NotFound();
             return Ok(result);
@@ -186,7 +167,6 @@ public class TicketsContractController : ControllerBase
     }
 
     /// <summary>Cancela un ticket</summary>
-    /// <remarks>Cancela un ticket activo por solicitud del cliente o error. Usar antes del pago si el pedido no debe continuar.</remarks>
     [HttpPost("api/sales/companies/{companyCen}/tickets/{ticketCen}/cancel")]
     [ProducesResponseType(typeof(CancelTicketContractResponse), 200)]
     [ProducesResponseType(404)]
@@ -198,7 +178,7 @@ public class TicketsContractController : ControllerBase
     {
         try
         {
-            var result = await _posService.CancelTicketContractAsync(ticketCen, request?.Reason);
+            var result = await _ticketsService.CancelTicketAsync(ticketCen, request?.Reason);
             if (result == null)
                 return NotFound();
             return Ok(result);
@@ -210,16 +190,14 @@ public class TicketsContractController : ControllerBase
     }
 
     /// <summary>Imprime un ticket</summary>
-    /// <remarks>Genera el PDF del ticket para impresion o envio. Usar al cerrar la cuenta o para comprobantes.</remarks>
     [HttpGet("api/sales/companies/{companyCen}/tickets/{ticketCen}/print")]
     [ProducesResponseType(200)]
     [ProducesResponseType(404)]
-    [ProducesResponseType(409)]
     public async Task<IActionResult> PrintTicket(string companyCen, string ticketCen)
     {
         try
         {
-            var bytes = await _posService.PrintTicketAsync(ticketCen);
+            var bytes = await _ticketsService.PrintTicketAsync(ticketCen);
             return File(bytes, "text/html", $"ticket-{ticketCen}.html");
         }
         catch (InvalidOperationException ex) when (ex.Message.Contains("not found") || ex.Message.Contains("Invalid"))
@@ -229,14 +207,12 @@ public class TicketsContractController : ControllerBase
     }
 
     /// <summary>Obtiene totales de un ticket</summary>
-    /// <remarks>Devuelve subtotal, impuesto y total del ticket. Usar para mostrar resumen antes de cobrar.</remarks>
     [HttpGet("api/sales/companies/{companyCen}/tickets/{ticketCen}/totals")]
     [ProducesResponseType(typeof(TicketTotalsContractResponse), 200)]
     [ProducesResponseType(404)]
-    [ProducesResponseType(409)]
     public async Task<IActionResult> GetTicketTotals(string companyCen, string ticketCen)
     {
-        var result = await _posService.GetTicketTotalsAsync(ticketCen);
+        var result = await _ticketsService.GetTicketTotalsAsync(ticketCen);
         if (result == null)
             return NotFound();
         return Ok(result);

@@ -70,6 +70,70 @@ public class StockService : InventoryServiceBase
         }).ToList();
     }
 
+    public async Task<StockIncreaseResponse?> IncreaseStockAsync(string companyCen, StockIncreaseRequest dto)
+    {
+        var business = await ResolveBusinessAsync(companyCen);
+        if (business == null)
+            return null;
+
+        var warehouse = await ResolveWarehouseAsync(business.Id, dto.WarehouseCen);
+        if (warehouse == null)
+            return null;
+
+        if (dto.Items.Count == 0)
+            throw new InvalidOperationException("At least one item is required.");
+
+        await using var transaction = await Context.Database.BeginTransactionAsync();
+
+        var document = await CreateDocumentAsync(
+            business.Id,
+            warehouse.Id,
+            "ENTRY",
+            dto.Reason ?? "Stock increase",
+            null,
+            dto.Source,
+            dto.ReferenceCen,
+            dto.Items.Select(i => new InventoryDocumentLineRequest
+            {
+                ProductCen = i.ProductCen,
+                Quantity = i.Quantity,
+                UnitCost = null
+            }).ToList());
+
+        if (document == null)
+            return null;
+
+        var movements = new List<string>();
+        foreach (var item in dto.Items)
+        {
+            if (item.Quantity <= 0)
+                throw new InvalidOperationException("Quantity must be greater than 0.");
+
+            var product = await ResolveProductAsync(business.Id, item.ProductCen);
+            if (product == null)
+                throw new InvalidOperationException("Product not found for company.");
+
+            var movement = await ApplyStockChangeAsync(
+                warehouse.Id,
+                product,
+                item.Quantity,
+                "ENTRY",
+                dto.Reason ?? "Stock increase",
+                document.Id);
+
+            movements.Add(movement.MovementCen);
+        }
+
+        await transaction.CommitAsync();
+
+        return new StockIncreaseResponse
+        {
+            DocumentCen = document.DocumentCen,
+            DocumentType = document.DocumentType,
+            GeneratedMovementCens = movements
+        };
+    }
+
     public async Task<StockAdjustmentResponse?> CreateAdjustmentAsync(string companyCen, StockAdjustmentRequest dto)
     {
         var business = await ResolveBusinessAsync(companyCen);

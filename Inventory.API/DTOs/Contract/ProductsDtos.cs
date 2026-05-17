@@ -60,3 +60,15 @@ public sealed class UpdateProductStatusRequest
 
     public string? Reason { get; init; }
 }
+
+public sealed class SellableProductDto
+{
+    public required string ProductCen { get; init; }
+    public required string Name { get; init; }
+    public required string CategoryCen { get; init; }
+    public required string CategoryName { get; init; }
+    public decimal SalePrice { get; init; }
+    public decimal AvailableQuantity { get; init; }
+    public bool IsAvailable { get; init; }
+    public string? StationCode { get; init; }
+}

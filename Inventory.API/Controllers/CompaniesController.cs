@@ -8,9 +8,9 @@ namespace Inventory.API.Controllers;
 [Route("api/inventory")]
 public class CompaniesController : ControllerBase
 {
-    private readonly InventoryContractService _service;
+    private readonly CompaniesService _service;
 
-    public CompaniesController(InventoryContractService service)
+    public CompaniesController(CompaniesService service)
     {
         _service = service;
     }

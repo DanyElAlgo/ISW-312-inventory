@@ -28,9 +28,6 @@ builder.Services.AddScoped<KardexService>();
 builder.Services.AddScoped<StockValidationService>();
 builder.Services.AddScoped<StockConsumeService>();
 
-// Register facade service
-builder.Services.AddScoped<InventoryContractService>();
-
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

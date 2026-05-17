@@ -199,6 +199,75 @@ public class ProductsService : InventoryServiceBase
         return MapProduct(product, GetProductStatus(product));
     }
 
+    public async Task<IReadOnlyList<SellableProductDto>?> GetSellableProductsAsync(
+        string companyCen,
+        string? search,
+        string? categoryCen,
+        string? warehouseCen,
+        bool onlyAvailable,
+        int page,
+        int pageSize)
+    {
+        var business = await ResolveBusinessAsync(companyCen);
+        if (business == null)
+            return null;
+
+        int? categoryId = null;
+        if (!string.IsNullOrWhiteSpace(categoryCen))
+        {
+            var category = await ResolveCategoryAsync(business.Id, categoryCen);
+            if (category == null)
+                return null;
+
+            categoryId = category.Id;
+        }
+
+        int? warehouseId = null;
+        if (!string.IsNullOrWhiteSpace(warehouseCen))
+        {
+            var warehouse = await ResolveWarehouseAsync(business.Id, warehouseCen);
+            if (warehouse == null)
+                return null;
+
+            warehouseId = warehouse.Id;
+        }
+
+        var products = await ProductRepository.GetByBusinessIdAsync(business.Id, categoryId, search);
+
+        var results = products
+            .Where(p => p.IsActive.GetValueOrDefault(true))
+            .Select(p =>
+            {
+                var stockEntries = warehouseId.HasValue
+                    ? p.WarehouseProducts.Where(wp => wp.WarehouseId == warehouseId.Value)
+                    : p.WarehouseProducts;
+                var available = stockEntries.Sum(wp => wp.StockLeft ?? 0);
+
+                return new SellableProductDto
+                {
+                    ProductCen = p.Cen ?? BuildCen("PROD", p.Id),
+                    Name = p.Name ?? string.Empty,
+                    CategoryCen = p.Category?.Cen ?? string.Empty,
+                    CategoryName = p.Category?.Name ?? string.Empty,
+                    SalePrice = p.Price ?? 0,
+                    AvailableQuantity = available,
+                    IsAvailable = available > 0,
+                    StationCode = p.StationCode
+                };
+            });
+
+        if (onlyAvailable)
+            results = results.Where(p => p.IsAvailable);
+
+        var normalizedPage = page < 1 ? 1 : page;
+        var normalizedPageSize = pageSize < 1 ? 50 : pageSize;
+
+        return results
+            .Skip((normalizedPage - 1) * normalizedPageSize)
+            .Take(normalizedPageSize)
+            .ToList();
+    }
+
     private async Task SetWarehouseProductStatusAsync(int productId, int statusId)
     {
         await WarehouseProductRepository.SetStatusForProductAsync(productId, statusId);

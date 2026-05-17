@@ -8,11 +8,18 @@ namespace Inventory.API.Controllers;
 [Route("api/inventory")]
 public class StockController : ControllerBase
 {
-    private readonly InventoryContractService _service;
+    private readonly StockService _stockService;
+    private readonly StockValidationService _validationService;
+    private readonly StockConsumeService _consumeService;
 
-    public StockController(InventoryContractService service)
+    public StockController(
+        StockService stockService,
+        StockValidationService validationService,
+        StockConsumeService consumeService)
     {
-        _service = service;
+        _stockService = stockService;
+        _validationService = validationService;
+        _consumeService = consumeService;
     }
 
     [HttpGet("companies/{companyCen}/stock")]
@@ -21,11 +28,33 @@ public class StockController : ControllerBase
         [FromQuery] string? productCen,
         [FromQuery] string? warehouseCen)
     {
-        var stock = await _service.GetStockAsync(companyCen, productCen, warehouseCen);
+        var stock = await _stockService.GetStockAsync(companyCen, productCen, warehouseCen);
         if (stock == null)
             return NotFound(new { message = "Company, product, or warehouse not found." });
 
         return Ok(stock);
+    }
+
+    [HttpPost("companies/{companyCen}/stock/increase")]
+    public async Task<ActionResult<StockIncreaseResponse>> IncreaseStock(
+        string companyCen,
+        [FromBody] StockIncreaseRequest dto)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        try
+        {
+            var result = await _stockService.IncreaseStockAsync(companyCen, dto);
+            if (result == null)
+                return NotFound(new { message = "Company or warehouse not found." });
+
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpPost("companies/{companyCen}/stock/adjustments")]
@@ -38,7 +67,7 @@ public class StockController : ControllerBase
 
         try
         {
-            var result = await _service.CreateAdjustmentAsync(companyCen, dto);
+            var result = await _stockService.CreateAdjustmentAsync(companyCen, dto);
             if (result == null)
                 return NotFound(new { message = "Company or warehouse not found." });
 
@@ -60,7 +89,7 @@ public class StockController : ControllerBase
 
         try
         {
-            var result = await _service.ValidateStockAsync(companyCen, dto);
+            var result = await _validationService.ValidateStockAsync(companyCen, dto);
             if (result == null)
                 return NotFound(new { message = "Company or warehouse not found." });
 
@@ -82,7 +111,7 @@ public class StockController : ControllerBase
 
         try
         {
-            var result = await _service.ConsumeStockAsync(companyCen, dto);
+            var result = await _consumeService.ConsumeStockAsync(companyCen, dto);
             if (result == null)
                 return NotFound(new { message = "Company or warehouse not found." });
 

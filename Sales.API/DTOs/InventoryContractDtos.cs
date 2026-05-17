@@ -12,15 +12,15 @@ public sealed class InventoryProductDto
     public string? StationCode { get; set; }
 }
 
-public sealed class InventoryProductListItemDto
+public sealed class InventorySellableProductDto
 {
     public string ProductCen { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
-    public string? CategoryCen { get; set; }
-    public string? CategoryName { get; set; }
+    public string CategoryCen { get; set; } = string.Empty;
+    public string CategoryName { get; set; } = string.Empty;
     public decimal SalePrice { get; set; }
     public decimal AvailableQuantity { get; set; }
-    public string Status { get; set; } = string.Empty;
+    public bool IsAvailable { get; set; }
     public string? StationCode { get; set; }
 }
 

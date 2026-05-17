@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Sales.API.DTOs;
-using Sales.API.Models;
+using Sales.API.Services;
 
 namespace Sales.API.Controllers;
 
@@ -9,29 +8,19 @@ namespace Sales.API.Controllers;
 [Tags("PaymentMethodsContract")]
 public class PaymentMethodsContractController : ControllerBase
 {
-    private readonly SalesDbContext _context;
+    private readonly PaymentMethodsService _paymentMethodsService;
 
-    public PaymentMethodsContractController(SalesDbContext context)
+    public PaymentMethodsContractController(PaymentMethodsService paymentMethodsService)
     {
-        _context = context;
+        _paymentMethodsService = paymentMethodsService;
     }
 
     /// <summary>Lista metodos de pago</summary>
-    /// <remarks>Devuelve los metodos de pago disponibles para ventas. Usar para opciones de pago al procesar tickets.</remarks>
     [HttpGet("api/sales/payment-methods")]
     [ProducesResponseType(typeof(List<PaymentMethodContractResponse>), 200)]
     public async Task<IActionResult> GetPaymentMethods()
     {
-        var methods = await _context.PaymentTypes
-            .OrderBy(pt => pt.Name)
-            .Select(pt => new PaymentMethodContractResponse
-            {
-                PaymentMethodCode = pt.Code ?? pt.Id.ToString(),
-                Name = pt.Name ?? string.Empty,
-                IsActive = pt.IsActive
-            })
-            .ToListAsync();
-
+        var methods = await _paymentMethodsService.GetPaymentMethodsAsync();
         return Ok(methods);
     }
 }

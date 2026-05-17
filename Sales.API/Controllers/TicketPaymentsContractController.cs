@@ -8,15 +8,14 @@ namespace Sales.API.Controllers;
 [Tags("TicketPaymentsContract")]
 public class TicketPaymentsContractController : ControllerBase
 {
-    private readonly PosService _posService;
+    private readonly PaymentsService _paymentsService;
 
-    public TicketPaymentsContractController(PosService posService)
+    public TicketPaymentsContractController(PaymentsService paymentsService)
     {
-        _posService = posService;
+        _paymentsService = paymentsService;
     }
 
     /// <summary>Procesa el pago de un ticket</summary>
-    /// <remarks>Registra el pago de un ticket usando el metodo indicado. Usar cuando el cliente finaliza la compra.</remarks>
     [HttpPost("api/sales/companies/{companyCen}/tickets/{ticketCen}/payment")]
     [ProducesResponseType(typeof(PayTicketContractResponse), 200)]
     [ProducesResponseType(400)]
@@ -32,7 +31,7 @@ public class TicketPaymentsContractController : ControllerBase
 
         try
         {
-            var (success, conflict) = await _posService.PayTicketContractAsync(companyCen, ticketCen, request.PaymentMethodCode);
+            var (success, conflict) = await _paymentsService.PayTicketAsync(companyCen, ticketCen, request.PaymentMethodCode);
 
             if (conflict != null)
                 return Conflict(conflict);
