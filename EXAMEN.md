@@ -70,6 +70,10 @@ Respondé cada pregunta en 1-2 párrafos. Está permitido usar IA para mejorar r
 
 **4.1** Tu compañero te avisa que va a cambiar el campo `cantidad` por `qty` en su respuesta del endpoint de stock. Tu sistema ya consume ese endpoint. Explicá qué riesgos genera ese cambio y qué prácticas conocés para evitar que un cambio así rompa los sistemas que dependen de su API.
 
+Usar qty, aunque suene más sencillo y hasta obvio, es mala práctica porque es un diminutivo, qué tal si este diminutivo tiene otro significado en otros sistemas? Es por eso que se sugiere siempre utilizar nombre completos. Y esto es solo la nomenclatura, aún no se considera el hecho de que los sistemas ya consumen el endpoint, en casos así, es mucho peor ya que los otros sistemas no detectarán el nombre al ser este distinto, causando nulos, perdidas de información y caídas de sistema si los campos son obligatorios.
+
+Si se va a realizar un cambio de ese tipo, no solo hay que informar al equipo completo, también hay que llegar a un acuerdo sobre si es verdaderamente necesario (para que TODOS apliquen el mismo cambio) o si es irrelevante (nadie cambia nada, sigue siendo `cantidad`).
+
 **4.2** Tu sistema de Ventas hace una petición al Inventario para descontar stock. La red se cae justo después de que Inventario procesó el descuento pero antes de que la respuesta llegue a Ventas. ¿Qué problema se genera? ¿Cómo lo manejarías?
 
 **4.3** Si el Inventario del compañero está caído, ¿debería tu Ventas permitir seguir registrando ventas? Justificá considerando ventajas y desventajas de cada postura. ¿Qué hace TU sistema hoy en ese caso?
