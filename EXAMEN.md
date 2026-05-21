@@ -2,12 +2,12 @@
 
 ## Sección 1 — Identificación
 
-- **Nombre completo:**
+- **Nombre completo:** Daniel Roland Peñaranda Colque
 - **Pareja asignada para el sábado:**
-- **Repositorio de Inventario:** [link]
-- **Repositorio de Ventas:** [link] (este mismo)
+- **Repositorio de Inventario:** [https://github.com/DanyElAlgo/ISW-312-inventory]
+- **Repositorio de Ventas:** [https://github.com/DanyElAlgo/ISW-312-inventory] (este mismo)
 - **Contrato API acordado en grupo:** [link al archivo contrato-api.yaml en este repo]
-- **URL del Swagger autogenerado** (cuando levantás el backend localmente): http://localhost:XXXX/swagger
+- **URL del Swagger autogenerado** (cuando levantás el backend localmente): http://localhost:5002/swagger/index.html
 
 ## Sección 2 — Decisiones técnicas con snippets
 
@@ -15,14 +15,20 @@
 
 Pegá la estructura de carpetas de tu proyecto de Ventas. Ejemplo:
 
-\`\`\`
-ventas-backend/
+```
+Sales.API/
 ├── Controllers/
+├── DTOs/
+├── HttpClients/
+├── Migrations/
+├── Models/
+├── Repositories/
 ├── Services/
-├── ...
-\`\`\`
+```
 
 Explicá en 2-3 líneas por qué la organizaste así.
+
+Lo hice de esta forma para tener una estructura simple y directa (parecida a Clean Architecture, pero sin interfaces porque a mi parecer son redundantes). Controllers, DTOs, Servicios y Modelos. La carpeta HttpClients aloja las solicitudes que se enviarán a inventario para mantenerlo separado del resto y así conservar la claridad.
 
 ### 2.2 Flujo de "registrar una venta"
 
