@@ -242,9 +242,25 @@ Este es el peor caso, ahora mismo no hay un soporte para ello, lo cual causará 
 
 Pegá:
 - La línea relevante de tu `.env.example` o `appsettings.json`.
+```json
+"Urls": "http://localhost:5002",
+"InventoryApi": {
+"BaseUrl": "http://localhost:5001"
+}
+```
 - El código que lee esa configuración y la usa para construir la llamada HTTP.
+```c#
+builder.Services.AddHttpClient<InventoryClient>(client =>
+{
+    var baseUrl = builder.Configuration["InventoryApi:BaseUrl"]
+        ?? throw new InvalidOperationException("InventoryApi:BaseUrl is not configured.");
+    client.BaseAddress = new Uri(baseUrl);
+});
+```
 
 Explicá en 1 línea cómo cambiarías esa URL si el sábado tu pareja levanta su backend en otra IP.
+
+Cambiando el `appsettings.Development.json`, la línea debajo de la declaración de `"InventoryApi"`.
 
 ## Sección 3 — Sobre el trabajo en grupo del contrato API
 
