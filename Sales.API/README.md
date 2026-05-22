@@ -27,3 +27,7 @@ Para la configuración de puertos, referirse a `.env.example`
 ## Ejecución
 
 En la raíz del repositorio, ejecutar `make` para lanzar los dos módulos al mismo tiempo, opcionalmente también se puede acceder a la carpeta de cada módulo y ahí ejecutar `make` o `dotnet run`
+
+## Mapa de endpoints
+
+El mapa de endpoints se encuentra en: `salesAPI.json`
