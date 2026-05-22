@@ -76,6 +76,10 @@ Si se va a realizar un cambio de ese tipo, no solo hay que informar al equipo co
 
 **4.2** Tu sistema de Ventas hace una petición al Inventario para descontar stock. La red se cae justo después de que Inventario procesó el descuento pero antes de que la respuesta llegue a Ventas. ¿Qué problema se genera? ¿Cómo lo manejarías?
 
+Si no llega la respuesta de vuelta a ventas, habrá un error de concurrencia, donde el módulo de Ventas pensará que Inventario no realizó ninguna transacción, por lo tanto, cancelando la de Ventas. Esto hace que Inventario tenga un registro de stock reducido mientras Ventas dice que nunca se generó dicha venta.
+
+Una solución adecuada es utilizar un identificador de la transacción realizada y verificar si esta ya se encuentra en Inventario, si se valida que ya existe la venta, Inventario debe retornar un mensaje existoso a Ventas, devolviendo así la paridad entre ambos.
+
 **4.3** Si el Inventario del compañero está caído, ¿debería tu Ventas permitir seguir registrando ventas? Justificá considerando ventajas y desventajas de cada postura. ¿Qué hace TU sistema hoy en ese caso?
 
 **4.4** Explicá por qué tener la URL del compañero hardcodeada como `http://localhost:5000` es un problema. ¿Cuál es la solución correcta y cómo la implementaste vos?
