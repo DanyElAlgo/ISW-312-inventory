@@ -18,3 +18,12 @@ psql -U postgres -d inventory_db -f backend/database/schema.sql
 psql -U postgres -d inventory_db -f backend/database/seed_data.sql
 ```
 
+Este comando creará la base de datos, los esquemas y poblará ambos esquemas (inventory y sales) al mismo tiempo.
+
+## Configuración
+
+Para la configuración de puertos, referirse a `.env.example`
+
+## Ejecución
+
+En la raíz del repositorio, ejecutar `make` para lanzar los dos módulos al mismo tiempo, opcionalmente también se puede acceder a la carpeta de cada módulo y ahí ejecutar `make` o `dotnet run`
