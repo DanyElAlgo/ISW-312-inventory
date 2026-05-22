@@ -87,3 +87,7 @@ Desde mi punto de vista, es más seguro y directo no permitir ventas cuando el I
 Mi sistema actualmente envía una solicitud de Ventas a Inventario, si recibe un error de solicitud HTTP, entonces cancela su propia transacción. Simple y efectivo si el sistema de Inventario está completamente caído.
 
 **4.4** Explicá por qué tener la URL del compañero hardcodeada como `http://localhost:5000` es un problema. ¿Cuál es la solución correcta y cómo la implementaste vos?
+
+Cualquier URL que tenga 'localhost' es exclusiva de la máquina en la que se abrió el API, lo que significa que nadie, ni siquiera en una misma red local, puede acceder a dicho API.
+
+Mi solución temporal fue reemplazar los `appsettings.json` para que usen una ruta wildcard (`"Urls": "http://*:5002"`), sin embargo, esto sigue siendo hardcodeado y no es visible para los compañeros que quieren acceder a mi API, lo correcto es usar archivos `.env` para alojar las rutas.
