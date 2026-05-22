@@ -207,7 +207,7 @@ var payment = _payments.Add(new Payment
 
 Explicá en 3-5 líneas por qué dividiste así las responsabilidades.
 
-
+Para mantener simple el repositorio mientras se conserva la legibilidad. Por eso separé las llamadas a APIs externos en su propia carpeta. Al separar las lógicas, el mantenimiento también se vuelve más fácil de cubrir.
 
 ### 2.3 Llamada al Inventario del compañero
 
@@ -232,8 +232,11 @@ public async Task<StockConsumeResponse?> ConsumeStockAsync(string companyCen, St
 
 Respondé brevemente:
 - ¿Qué pasa si el compañero responde con código 200 OK?
+Se continúa el servicio y se retorna el `PayTicketContractResponse` al módulo de Ventas
 - ¿Qué pasa si responde con 404 o 500?
+El proceso de venta se detiene, se lanza una `InvalidOperationException`. 
 - ¿Qué pasa si el compañero está caído (timeout)?
+Este es el peor caso, ahora mismo no hay un soporte para ello, lo cual causará que el sistema retorne `InvalidOperationException` y un problema de concurrencia dependiendo de lo que pudo hacer el API de Inventario antes de colgarse.
 
 ### 2.4 Configuración de la URL del compañero
 
