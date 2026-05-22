@@ -22,7 +22,7 @@ Este comando creará la base de datos, los esquemas y poblará ambos esquemas (i
 
 ## Configuración
 
-Para la configuración de puertos, referirse a `.env.example`
+El archivo `appsettings.Development.json` contiene las rutas y puertos que se abrirán tanto para Inventory como para Sales.
 
 ## Ejecución
 
