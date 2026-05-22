@@ -35,15 +35,200 @@ Lo hice de esta forma para tener una estructura simple y directa (parecida a Cle
 Pegá los snippets del código que se ejecuta cuando un usuario confirma una venta, en orden:
 
 1. El endpoint que recibe el request (Controller).
+```c#
+[HttpPost("api/sales/companies/{companyCen}/tickets/{ticketCen}/payment")]
+[ProducesResponseType(typeof(PayTicketContractResponse), 200)]
+[ProducesResponseType(400)]
+[ProducesResponseType(404)]
+[ProducesResponseType(typeof(ProcessRestaurantOrderPaymentResultDto), 409)]
+public async Task<IActionResult> PayTicket(
+    string companyCen,
+    string ticketCen,
+    [FromBody] PayTicketContractRequest request)
+{
+    if (string.IsNullOrWhiteSpace(request.PaymentMethodCode))
+        return BadRequest("paymentMethodCode is required.");
+
+    try
+    {
+        var (success, conflict) = await _paymentsService.PayTicketAsync(companyCen, ticketCen, request.PaymentMethodCode);
+
+        if (conflict != null)
+            return Conflict(conflict);
+
+        if (success == null)
+            return NotFound();
+
+        return Ok(success);
+    }
+    catch (InvalidOperationException ex)
+    {
+        return BadRequest(ex.Message);
+    }
+}
+```
 2. La capa intermedia que procesa la lógica (Service / Use Case / Handler).
+```c#
+public async Task<(PayTicketContractResponse? success, ProcessRestaurantOrderPaymentResultDto? conflict)>
+    PayTicketAsync(string companyCen, string ticketCen, string paymentMethodCode)
+{
+    if (!int.TryParse(ticketCen, out var ticketId))
+        throw new InvalidOperationException("Invalid ticketCen.");
+
+    var ticket = await _tickets.GetByIdAsync(ticketId, includeItems: true, includeStatus: true);
+    if (ticket == null)
+        throw new InvalidOperationException("Ticket not found.");
+
+    var statusName = ticket.Status?.Name?.ToLower() ?? "";
+    if (statusName is not ("open" or "abierto"))
+        throw new InvalidOperationException("Ticket is not open.");
+
+    var waiter = await _orderTicketsService.GetAssignedWaiterAsync(ticketId);
+    if (waiter == null)
+        throw new InvalidOperationException("A waiter must be assigned before payment.");
+
+    var items = ticket.OrderItems.Where(i => !string.IsNullOrWhiteSpace(i.ProductCen)).ToList();
+    if (!items.Any())
+        throw new InvalidOperationException("Ticket has no items.");
+
+    var paymentType = await _paymentTypes.FindByCodeOrNameAsync(paymentMethodCode);
+    if (paymentType == null)
+        throw new InvalidOperationException($"Payment method '{paymentMethodCode}' not found.");
+
+    var validateDto = new StockValidationRequest
+    {
+        WarehouseCen = _integrationOptions.WarehouseCen,
+        Source = _integrationOptions.Source,
+        ReferenceCen = BuildAccountNumber(ticketId),
+        Items = items.Select(i => new StockValidationItemDto
+        {
+            ProductCen = i.ProductCen!,
+            Quantity = (decimal)(i.Qty ?? 0)
+        }).ToList()
+    };
+
+    var validation = await _inventoryClient.ValidateStockAsync(_integrationOptions.CompanyCen, validateDto);
+    if (validation == null)
+        throw new InvalidOperationException("Could not validate stock.");
+
+    if (!validation.IsValid)
+    {
+        var subtotal = items.Sum(i => (i.UnitPrice ?? 0) * (decimal)(i.Qty ?? 0));
+        var tax = subtotal * (ticket.TaxRateSnapshot ?? 0);
+        var conflict = new ProcessRestaurantOrderPaymentResultDto
+        {
+            IsSuccess = false,
+            Message = "Insufficient stock.",
+            Subtotal = subtotal,
+            TaxAmount = tax,
+            Total = subtotal + tax,
+            Insufficiencies = validation.Requirements.Select(r => new StockInsufficiencyResponseDto
+            {
+                ProductCen = r.ProductCen,
+                ProductName = r.ProductName,
+                WarehouseCen = r.WarehouseCen,
+                RequestedQuantity = (int)r.RequestedQuantity,
+                AvailableQuantity = (int)r.AvailableQuantity,
+                MissingQuantity = (int)r.MissingQuantity
+            }).ToList()
+        };
+        return (null, conflict);
+    }
+
+    var consumeDto = new StockConsumeRequest
+    {
+        WarehouseCen = _integrationOptions.WarehouseCen,
+        Source = _integrationOptions.Source,
+        ReferenceCen = BuildAccountNumber(ticketId),
+        Reason = $"Sale — ticket #{ticketId}",
+        Items = items.Select(i => new StockConsumeItemDto
+        {
+            ProductCen = i.ProductCen!,
+            Quantity = (decimal)(i.Qty ?? 0)
+        }).ToList()
+    };
+
+    var deduction = await _inventoryClient.ConsumeStockAsync(_integrationOptions.CompanyCen, consumeDto);
+    if (deduction == null || !deduction.Success)
+        throw new InvalidOperationException(deduction?.Message ?? "Stock deduction failed.");
+
+    var payment = _payments.Add(new Payment
+    {
+        OrderId = ticketId,
+        PaymentTypeId = paymentType.Id,
+        PaidAt = DateTime.UtcNow
+    });
+    ticket.StatusId = await _statuses.GetPaidStatusIdAsync();
+    await _uow.SaveChangesAsync();
+
+    var sub = items.Sum(i => (i.UnitPrice ?? 0) * (decimal)(i.Qty ?? 0));
+    var taxAmount = sub * (ticket.TaxRateSnapshot ?? 0);
+
+    return (new PayTicketContractResponse
+    {
+        SaleCen = $"SALE-{payment.Id}",
+        TicketCen = ticketId.ToString(),
+        Status = "Pagado",
+        Subtotal = sub,
+        TaxAmount = taxAmount,
+        Total = sub + taxAmount,
+        InventoryDocumentCen = deduction.DocumentCen
+    }, null);
+}
+```
 3. La parte que llama al Inventario del compañero (HttpClient o equivalente).
+```c#
+public async Task<StockConsumeResponse?> ConsumeStockAsync(string companyCen, StockConsumeRequest dto)
+{
+    try
+    {
+        var response = await _http.PostAsJsonAsync($"api/inventory/companies/{companyCen}/stock/consume", dto);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<StockConsumeResponse>();
+    }
+    catch (HttpRequestException)
+    {
+        throw new InvalidOperationException(
+            "Inventory service is unavailable. Cannot deduct stock at this time.");
+    }
+}
+```
 4. La parte que persiste la venta en tu BD.
+```c#
+var payment = _payments.Add(new Payment
+    {
+        OrderId = ticketId,
+        PaymentTypeId = paymentType.Id,
+        PaidAt = DateTime.UtcNow
+    });
+    ticket.StatusId = await _statuses.GetPaidStatusIdAsync();
+    await _uow.SaveChangesAsync();
+```
 
 Explicá en 3-5 líneas por qué dividiste así las responsabilidades.
+
+
 
 ### 2.3 Llamada al Inventario del compañero
 
 Pegá el código exacto donde tu Ventas llama al API del Inventario del compañero.
+
+```c#
+public async Task<StockConsumeResponse?> ConsumeStockAsync(string companyCen, StockConsumeRequest dto)
+{
+    try
+    {
+        var response = await _http.PostAsJsonAsync($"api/inventory/companies/{companyCen}/stock/consume", dto);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<StockConsumeResponse>();
+    }
+    catch (HttpRequestException)
+    {
+        throw new InvalidOperationException(
+            "Inventory service is unavailable. Cannot deduct stock at this time.");
+    }
+}
+```
 
 Respondé brevemente:
 - ¿Qué pasa si el compañero responde con código 200 OK?
