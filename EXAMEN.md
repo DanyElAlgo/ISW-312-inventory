@@ -82,4 +82,8 @@ Una solución adecuada es utilizar un identificador de la transacción realizada
 
 **4.3** Si el Inventario del compañero está caído, ¿debería tu Ventas permitir seguir registrando ventas? Justificá considerando ventajas y desventajas de cada postura. ¿Qué hace TU sistema hoy en ese caso?
 
+Desde mi punto de vista, es más seguro y directo no permitir ventas cuando el Inventario está caído. Así evito acumular problemas de concurrencia. Claro está que al hacer esto, también dejas al cliente en espera.
+
+Mi sistema actualmente envía una solicitud de Ventas a Inventario, si recibe un error de solicitud HTTP, entonces cancela su propia transacción. Simple y efectivo si el sistema de Inventario está completamente caído.
+
 **4.4** Explicá por qué tener la URL del compañero hardcodeada como `http://localhost:5000` es un problema. ¿Cuál es la solución correcta y cómo la implementaste vos?
