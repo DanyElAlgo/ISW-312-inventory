@@ -26,6 +26,24 @@ public class StockConsumeService : InventoryServiceBase
         if (business == null)
             return null;
 
+        var existing = await Context.InventoryDocuments
+            .FirstOrDefaultAsync(d => d.ReferenceCen == dto.ReferenceCen && d.BusinessId == business.Id);
+
+        if (existing != null)
+        {
+            List<string> existingMovements = await Context.Kardices
+                .Where(k => k.DocumentId == existing.Id && k.MovementCen != null)
+                .Select(k => k.MovementCen!)
+                .ToListAsync();
+            return new StockConsumeResponse 
+            { 
+                Success = true, 
+                DocumentCen = existing.DocumentCen, 
+                DocumentType = existing.DocumentType, 
+                GeneratedMovementCens = existingMovements
+            };
+        }
+
         var warehouse = await ResolveWarehouseAsync(business.Id, dto.WarehouseCen);
         if (warehouse == null)
             return null;

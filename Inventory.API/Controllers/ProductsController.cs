@@ -29,16 +29,6 @@ public class ProductsController : ControllerBase
         return Ok(products);
     }
 
-    [HttpGet("companies/{companyCen}/products/{productCen}")]
-    public async Task<ActionResult<ProductDto>> GetProduct(string companyCen, string productCen)
-    {
-        var product = await _service.GetProductAsync(companyCen, productCen);
-        if (product == null)
-            return NotFound(new { message = "Product not found." });
-
-        return Ok(product);
-    }
-
     [HttpPost("companies/{companyCen}/products")]
     public async Task<ActionResult<ProductDto>> CreateProduct(string companyCen, [FromBody] CreateProductRequest dto)
     {
@@ -57,6 +47,16 @@ public class ProductsController : ControllerBase
         {
             return BadRequest(new { message = ex.Message });
         }
+    }
+
+    [HttpPost("companies/{companyCen}/products/lookup")]
+    public async Task<ActionResult<IReadOnlyList<ProductDto>>> LookupProducts(string companyCen, [FromBody] ProductLookupContractRequest dto)
+    {
+        var products = await _service.LookupProductsAsync(companyCen, dto.ProductCens);
+        if (products == null)
+            return NotFound(new { message = "Company not found." });
+
+        return Ok(products);
     }
 
     [HttpPut("companies/{companyCen}/products/{productCen}")]

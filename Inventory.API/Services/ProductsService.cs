@@ -52,6 +52,24 @@ public class ProductsService : InventoryServiceBase
         return results;
     }
 
+    public async Task<IReadOnlyList<ProductDto>?> LookupProductsAsync(string companyCen, IReadOnlyList<string> productCens)
+    {
+        var business = await ResolveBusinessAsync(companyCen);
+        if (business == null)
+            return null;
+
+        if (productCens == null || productCens.Count == 0)
+            return new List<ProductDto>();
+
+        var wanted = new HashSet<string>(productCens);
+        var products = await ProductRepository.GetByBusinessIdAsync(business.Id);
+
+        return products
+            .Where(p => p.Cen != null && wanted.Contains(p.Cen))
+            .Select(p => MapProduct(p, GetProductStatus(p)))
+            .ToList();
+    }
+
     public async Task<ProductDto?> GetProductAsync(string companyCen, string productCen)
     {
         var business = await ResolveBusinessAsync(companyCen);

@@ -61,6 +61,11 @@ public sealed class UpdateProductStatusRequest
     public string? Reason { get; init; }
 }
 
+public sealed class ProductLookupContractRequest
+{
+    public IReadOnlyList<string> ProductCens { get; init; } = new List<string>();
+}
+
 public sealed class SellableProductDto
 {
     public required string ProductCen { get; init; }

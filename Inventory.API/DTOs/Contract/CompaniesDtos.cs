@@ -7,6 +7,13 @@ public sealed class CompanyDto
     public bool IsActive { get; init; }
 }
 
+public sealed class CompanyLookupContractDto
+{
+    public int CompanyId { get; init; }
+    public required string CompanyCen { get; init; }
+    public required string Name { get; init; }
+}
+
 public sealed class InventoryDashboardDto
 {
     public required string CompanyCen { get; init; }

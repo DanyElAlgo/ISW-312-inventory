@@ -31,6 +31,20 @@ public class CompaniesService : InventoryServiceBase
         }).ToList();
     }
 
+    public async Task<CompanyLookupContractDto?> GetCompanyAsync(string companyCen)
+    {
+        var business = await ResolveBusinessAsync(companyCen);
+        if (business == null)
+            return null;
+
+        return new CompanyLookupContractDto
+        {
+            CompanyId = business.Id,
+            CompanyCen = business.Cen ?? BuildCen("COMP", business.Id),
+            Name = business.Name ?? string.Empty
+        };
+    }
+
     public async Task<InventoryDashboardDto?> GetDashboardAsync(string companyCen)
     {
         var business = await ResolveBusinessAsync(companyCen);
