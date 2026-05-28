@@ -41,7 +41,7 @@ public class PaymentsService
         PayTicketAsync(string companyCen, string ticketCen, string paymentMethodCode)
     {
         if (!int.TryParse(ticketCen, out var ticketId))
-            throw new InvalidOperationException("Invalid ticketCen.");
+            throw new InvalidOperationException("Invalid ticketCen."); //TODO: Fix string
 
         var ticket = await _tickets.GetByIdAsync(ticketId, includeItems: true, includeStatus: true);
         if (ticket == null)

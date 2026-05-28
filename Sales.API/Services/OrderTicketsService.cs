@@ -50,14 +50,14 @@ public class OrderTicketsService
         var openStatusId = await _statuses.GetOpenStatusIdAsync();
         var taxConfig = await _taxConfig.GetOrCreateAsync();
 
-        var today = DateTime.UtcNow.Date;
+        var today = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Unspecified);
         var dailyCount = await _tickets.CountByCreatedAtRangeAsync(today, today.AddDays(1));
 
         var ticket = _tickets.Add(new OrderTicket
         {
             StatusId = openStatusId,
             TaxRateSnapshot = taxConfig.TaxRate,
-            CreatedAt = DateTime.UtcNow,
+            CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Unspecified),
             DailyNumber = dailyCount + 1
         });
         await _uow.SaveChangesAsync();
@@ -214,7 +214,7 @@ public class OrderTicketsService
         var command = _commands.Add(new OrderCommand { OrderId = ticketId, WaiterId = waiter.Id });
         await _uow.SaveChangesAsync();
 
-        var now = DateTime.UtcNow;
+        var now = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Unspecified);
         foreach (var item in unsentItems)
         {
             if (string.IsNullOrWhiteSpace(item.ProductCen))
