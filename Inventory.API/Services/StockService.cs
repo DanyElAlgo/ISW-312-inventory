@@ -249,7 +249,7 @@ public class StockService : InventoryServiceBase
             ExternalReference = externalReference,
             Source = source,
             ReferenceCen = referenceCen,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Unspecified)
         };
 
         Context.InventoryDocuments.Add(document);
@@ -323,7 +323,7 @@ public class StockService : InventoryServiceBase
             ActionType = movementType,
             ActionQty = (double)Math.Abs(delta),
             Reason = reason,
-            TimeStamp = DateTime.UtcNow
+            TimeStamp = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Unspecified)
         });
 
         await Context.SaveChangesAsync();

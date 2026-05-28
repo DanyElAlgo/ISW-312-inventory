@@ -22,6 +22,16 @@ public class CompaniesController : ControllerBase
         return Ok(companies);
     }
 
+    [HttpGet("companies/{companyCen}")]
+    public async Task<ActionResult<CompanyLookupContractDto>> GetCompany(string companyCen)
+    {
+        var company = await _service.GetCompanyAsync(companyCen);
+        if (company == null)
+            return NotFound(new { message = "Company not found." });
+
+        return Ok(company);
+    }
+
     [HttpGet("companies/{companyCen}/dashboard")]
     public async Task<ActionResult<InventoryDashboardDto>> GetDashboard(string companyCen)
     {

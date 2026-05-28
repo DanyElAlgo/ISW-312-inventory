@@ -96,10 +96,10 @@ public class InventoryClient
             response.EnsureSuccessStatusCode();
             return await response.Content.ReadFromJsonAsync<StockValidationResponse>();
         }
-        catch (HttpRequestException)
+        catch (HttpRequestException e)
         {
             throw new InvalidOperationException(
-                "Inventory service is unavailable. Cannot validate stock at this time.");
+                "Inventory service is unavailable. Cannot validate stock at this time.", e);
         }
     }
 

@@ -24,41 +24,4 @@ public class WarehousesController : ControllerBase
 
         return Ok(warehouses);
     }
-
-    [HttpPost("companies/{companyCen}/warehouses")]
-    public async Task<ActionResult<WarehouseDto>> CreateWarehouse(string companyCen, [FromBody] CreateWarehouseRequest dto)
-    {
-        if (!ModelState.IsValid)
-            return BadRequest(ModelState);
-
-        try
-        {
-            var warehouse = await _service.CreateWarehouseAsync(companyCen, dto);
-            if (warehouse == null)
-                return NotFound(new { message = "Company not found." });
-
-            return Ok(warehouse);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
-    }
-
-    [HttpPut("companies/{companyCen}/warehouses/{warehouseCen}")]
-    public async Task<ActionResult<WarehouseDto>> UpdateWarehouse(string companyCen, string warehouseCen, [FromBody] UpdateWarehouseRequest dto)
-    {
-        try
-        {
-            var warehouse = await _service.UpdateWarehouseAsync(companyCen, warehouseCen, dto);
-            if (warehouse == null)
-                return NotFound(new { message = "Warehouse not found." });
-
-            return Ok(warehouse);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
-    }
 }
