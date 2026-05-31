@@ -29,6 +29,16 @@ public class ProductsController : ControllerBase
         return Ok(products);
     }
 
+    [HttpGet("companies/{companyCen}/products/{productCen}")]
+    public async Task<ActionResult<ProductDto>> GetProduct(string companyCen, string productCen)
+    {
+        var product = await _service.GetProductAsync(companyCen, productCen);
+        if (product == null)
+            return NotFound(new { message = "Product not found." });
+
+        return Ok(product);
+    }
+
     [HttpPost("companies/{companyCen}/products")]
     public async Task<ActionResult<ProductDto>> CreateProduct(string companyCen, [FromBody] CreateProductRequest dto)
     {

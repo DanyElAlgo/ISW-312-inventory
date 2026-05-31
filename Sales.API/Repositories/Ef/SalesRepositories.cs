@@ -23,6 +23,20 @@ public sealed class OrderTicketRepository : IOrderTicketRepository
         return await query.FirstOrDefaultAsync(t => t.Id == id);
     }
 
+    public async Task<OrderTicket?> GetByCenAsync(string cen, bool includeItems = false, bool includeStatus = false)
+    {
+        IQueryable<OrderTicket> query = _context.OrderTickets;
+        if (includeStatus)
+            query = query.Include(t => t.Status);
+        if (includeItems)
+            query = query.Include(t => t.OrderItems);
+
+        var ticket = await query.FirstOrDefaultAsync(t => t.Cen == cen);
+        if (ticket == null && int.TryParse(cen, out var id))
+            ticket = await query.FirstOrDefaultAsync(t => t.Id == id);
+        return ticket;
+    }
+
     public async Task<IReadOnlyList<OrderTicket>> GetByStatusAsync(int statusId, bool includeItems = false, bool includeStatus = false)
     {
         IQueryable<OrderTicket> query = _context.OrderTickets.Where(t => t.StatusId == statusId);
@@ -57,6 +71,18 @@ public sealed class OrderItemRepository : IOrderItemRepository
         if (includeStatus)
             query = query.Include(i => i.Status);
         return await query.FirstOrDefaultAsync(i => i.Id == id);
+    }
+
+    public async Task<OrderItem?> GetByCenAsync(string cen, bool includeStatus = false)
+    {
+        IQueryable<OrderItem> query = _context.OrderItems;
+        if (includeStatus)
+            query = query.Include(i => i.Status);
+
+        var item = await query.FirstOrDefaultAsync(i => i.Cen == cen);
+        if (item == null && int.TryParse(cen, out var id))
+            item = await query.FirstOrDefaultAsync(i => i.Id == id);
+        return item;
     }
 
     public async Task<IReadOnlyList<OrderItem>> GetByOrderIdAsync(int orderId, bool includeStatus = false)
@@ -309,6 +335,7 @@ public sealed class CommandItemRepository : ICommandItemRepository
         return await _context.CommandItems
             .Include(ci => ci.Station).ThenInclude(s => s!.Type)
             .Include(ci => ci.OrderItem).ThenInclude(oi => oi!.Status)
+            .Include(ci => ci.OrderItem).ThenInclude(oi => oi!.Order)
             .Where(ci => ci.Station != null && ci.Station.TypeId == stationTypeId && ci.OrderItem != null)
             .OrderBy(ci => ci.CommandId)
             .ToListAsync();

@@ -4,6 +4,8 @@ public partial class OrderTicket
 {
     public int Id { get; set; }
 
+    public string? Cen { get; set; }
+
     public int? CustomerId { get; set; }
 
     public int? StatusId { get; set; }

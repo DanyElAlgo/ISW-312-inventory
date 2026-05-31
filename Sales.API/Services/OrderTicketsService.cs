@@ -1,5 +1,6 @@
 using System.Text;
 using Sales.API.DTOs;
+using Sales.API.Helpers;
 using Sales.API.Models;
 using Sales.API.Repositories.Interfaces;
 
@@ -62,6 +63,9 @@ public class OrderTicketsService
         });
         await _uow.SaveChangesAsync();
 
+        ticket.Cen = SalesCenBuilder.BuildTicketCen(ticket.Id);
+        await _uow.SaveChangesAsync();
+
         if (!string.IsNullOrWhiteSpace(request.WaiterCen) && int.TryParse(request.WaiterCen, out var waiterId)
             && await _waiters.ExistsAsync(waiterId))
         {
@@ -75,10 +79,10 @@ public class OrderTicketsService
 
     public async Task<AssignTicketWaiterContractResponse?> AssignWaiterAsync(string ticketCen, AssignTicketWaiterContractRequest request)
     {
-        if (!int.TryParse(ticketCen, out var ticketId) || !int.TryParse(request.WaiterCen, out var waiterId))
+        if (!int.TryParse(request.WaiterCen, out var waiterId))
             return null;
 
-        var ticket = await _tickets.GetByIdAsync(ticketId);
+        var ticket = await _tickets.GetByCenAsync(ticketCen);
         if (ticket == null)
             return null;
 
@@ -86,9 +90,9 @@ public class OrderTicketsService
         if (waiter == null)
             throw new InvalidOperationException("Waiter not found.");
 
-        var latest = await _commands.GetLatestByOrderIdAsync(ticketId);
+        var latest = await _commands.GetLatestByOrderIdAsync(ticket.Id);
         if (latest == null)
-            _commands.Add(new OrderCommand { OrderId = ticketId, WaiterId = waiterId });
+            _commands.Add(new OrderCommand { OrderId = ticket.Id, WaiterId = waiterId });
         else
             latest.WaiterId = waiterId;
 
@@ -96,7 +100,7 @@ public class OrderTicketsService
 
         return new AssignTicketWaiterContractResponse
         {
-            TicketCen = ticketId.ToString(),
+            TicketCen = ticket.Cen ?? ticket.Id.ToString(),
             WaiterCen = request.WaiterCen,
             WaiterName = waiter.Name ?? string.Empty
         };
@@ -104,10 +108,7 @@ public class OrderTicketsService
 
     public async Task<CancelTicketContractResponse?> CancelTicketAsync(string ticketCen, string? reason)
     {
-        if (!int.TryParse(ticketCen, out var ticketId))
-            return null;
-
-        var ticket = await _tickets.GetByIdAsync(ticketId, includeStatus: true);
+        var ticket = await _tickets.GetByCenAsync(ticketCen, includeStatus: true);
         if (ticket == null)
             return null;
 
@@ -122,20 +123,17 @@ public class OrderTicketsService
         ticket.CancellationReason = reason;
         await _uow.SaveChangesAsync();
 
-        var refreshed = await _tickets.GetByIdAsync(ticketId, includeStatus: true);
+        var refreshed = await _tickets.GetByIdAsync(ticket.Id, includeStatus: true);
         return new CancelTicketContractResponse
         {
-            TicketCen = ticketId.ToString(),
+            TicketCen = ticket.Cen ?? ticket.Id.ToString(),
             Status = refreshed?.Status?.Name ?? "Cancelado"
         };
     }
 
     public async Task<TicketTotalsContractResponse?> GetTicketTotalsAsync(string ticketCen)
     {
-        if (!int.TryParse(ticketCen, out var ticketId))
-            return null;
-
-        var ticket = await _tickets.GetByIdAsync(ticketId, includeItems: true);
+        var ticket = await _tickets.GetByCenAsync(ticketCen, includeItems: true);
         if (ticket == null)
             return null;
 
@@ -145,7 +143,7 @@ public class OrderTicketsService
 
         return new TicketTotalsContractResponse
         {
-            TicketCen = ticketId.ToString(),
+            TicketCen = ticket.Cen ?? ticket.Id.ToString(),
             Subtotal = subtotal,
             TaxAmount = taxAmount,
             Total = subtotal + taxAmount
@@ -154,14 +152,11 @@ public class OrderTicketsService
 
     public async Task<byte[]> PrintTicketAsync(string ticketCen)
     {
-        if (!int.TryParse(ticketCen, out var ticketId))
-            throw new InvalidOperationException("Invalid ticketCen.");
-
-        var ticket = await _tickets.GetByIdAsync(ticketId, includeItems: true, includeStatus: true);
+        var ticket = await _tickets.GetByCenAsync(ticketCen, includeItems: true, includeStatus: true);
         if (ticket == null)
             throw new InvalidOperationException("Ticket not found.");
 
-        var waiter = await GetAssignedWaiterAsync(ticketId);
+        var waiter = await GetAssignedWaiterAsync(ticket.Id);
         var subtotal = ticket.OrderItems.Sum(i => (i.UnitPrice ?? 0) * (decimal)(i.Qty ?? 0));
         var taxRate = ticket.TaxRateSnapshot ?? 0;
         var taxAmount = subtotal * taxRate;
@@ -196,22 +191,19 @@ public class OrderTicketsService
         string ticketCen,
         Func<string, Task<int?>> resolveStationForProductAsync)
     {
-        if (!int.TryParse(ticketCen, out var ticketId))
-            return null;
-
-        var ticket = await _tickets.GetByIdAsync(ticketId);
+        var ticket = await _tickets.GetByCenAsync(ticketCen);
         if (ticket == null)
             return null;
 
-        var waiter = await GetAssignedWaiterAsync(ticketId);
+        var waiter = await GetAssignedWaiterAsync(ticket.Id);
         if (waiter == null)
             throw new InvalidOperationException("A waiter must be assigned before sending the ticket to kitchen.");
 
-        var unsentItems = await _items.GetUnsentByOrderIdAsync(ticketId, includeStatus: true);
+        var unsentItems = await _items.GetUnsentByOrderIdAsync(ticket.Id, includeStatus: true);
         if (!unsentItems.Any())
             throw new InvalidOperationException("There are no new items to send.");
 
-        var command = _commands.Add(new OrderCommand { OrderId = ticketId, WaiterId = waiter.Id });
+        var command = _commands.Add(new OrderCommand { OrderId = ticket.Id, WaiterId = waiter.Id });
         await _uow.SaveChangesAsync();
 
         var now = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Unspecified);
@@ -229,7 +221,7 @@ public class OrderTicketsService
 
         await _uow.SaveChangesAsync();
 
-        var allItems = await _items.GetByOrderIdAsync(ticketId, includeStatus: true);
+        var allItems = await _items.GetByOrderIdAsync(ticket.Id, includeStatus: true);
         return allItems.Select(OrderItemMapping.MapToContract).ToList();
     }
 
@@ -250,7 +242,7 @@ public class OrderTicketsService
 
         return new TicketContractResponse
         {
-            TicketCen = ticket.Id.ToString(),
+            TicketCen = ticket.Cen ?? ticket.Id.ToString(),
             DailyNumber = ticket.DailyNumber,
             Status = ticket.Status?.Name ?? "Open",
             CreatedAt = ticket.CreatedAt.ToString("O"),
@@ -265,7 +257,7 @@ internal static class OrderItemMapping
 {
     public static TicketItemContractResponse MapToContract(OrderItem item) => new()
     {
-        TicketItemCen = item.Id.ToString(),
+        TicketItemCen = item.Cen ?? item.Id.ToString(),
         ProductCen = item.ProductCen ?? string.Empty,
         ProductName = item.ProductName ?? string.Empty,
         Quantity = (int)(item.Qty ?? 0),

@@ -4,6 +4,8 @@ public partial class OrderItem
 {
     public int Id { get; set; }
 
+    public string? Cen { get; set; }
+
     public double? Qty { get; set; }
 
     public string? AdditionalNote { get; set; }

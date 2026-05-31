@@ -38,12 +38,9 @@ public class PaymentsService
     }
 
     public async Task<(PayTicketContractResponse? success, ProcessRestaurantOrderPaymentResultDto? conflict)>
-        PayTicketAsync(string companyCen, string ticketCen, string paymentMethodCode)
+        PayTicketAsync(string ticketCen, string paymentMethodCode)
     {
-        if (!int.TryParse(ticketCen, out var ticketId))
-            throw new InvalidOperationException("Invalid ticketCen."); //TODO: Fix string
-
-        var ticket = await _tickets.GetByIdAsync(ticketId, includeItems: true, includeStatus: true);
+        var ticket = await _tickets.GetByCenAsync(ticketCen, includeItems: true, includeStatus: true);
         if (ticket == null)
             throw new InvalidOperationException("Ticket not found.");
 
@@ -51,7 +48,7 @@ public class PaymentsService
         if (statusName is not ("open" or "abierto"))
             throw new InvalidOperationException("Ticket is not open.");
 
-        var waiter = await _orderTicketsService.GetAssignedWaiterAsync(ticketId);
+        var waiter = await _orderTicketsService.GetAssignedWaiterAsync(ticket.Id);
         if (waiter == null)
             throw new InvalidOperationException("A waiter must be assigned before payment.");
 
@@ -67,7 +64,7 @@ public class PaymentsService
         {
             WarehouseCen = _integrationOptions.WarehouseCen,
             Source = _integrationOptions.Source,
-            ReferenceCen = BuildAccountNumber(ticketId),
+            ReferenceCen = BuildAccountNumber(ticket.Id),
             Items = items.Select(i => new StockValidationItemDto
             {
                 ProductCen = i.ProductCen!,
@@ -107,8 +104,8 @@ public class PaymentsService
         {
             WarehouseCen = _integrationOptions.WarehouseCen,
             Source = _integrationOptions.Source,
-            ReferenceCen = BuildAccountNumber(ticketId),
-            Reason = $"Sale — ticket #{ticketId}",
+            ReferenceCen = BuildAccountNumber(ticket.Id),
+            Reason = $"Sale — ticket #{ticket.Id}",
             Items = items.Select(i => new StockConsumeItemDto
             {
                 ProductCen = i.ProductCen!,
@@ -122,7 +119,7 @@ public class PaymentsService
 
         var payment = _payments.Add(new Payment
         {
-            OrderId = ticketId,
+            OrderId = ticket.Id,
             PaymentTypeId = paymentType.Id,
             PaidAt = DateTime.UtcNow
         });
@@ -135,7 +132,7 @@ public class PaymentsService
         return (new PayTicketContractResponse
         {
             SaleCen = $"SALE-{payment.Id}",
-            TicketCen = ticketId.ToString(),
+            TicketCen = ticket.Cen ?? ticket.Id.ToString(),
             Status = "Pagado",
             Subtotal = sub,
             TaxAmount = taxAmount,

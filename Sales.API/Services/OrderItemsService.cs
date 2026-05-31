@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Options;
 using Sales.API.DTOs;
+using Sales.API.Helpers;
 using Sales.API.HttpClients;
 using Sales.API.Models;
 using Sales.API.Repositories.Interfaces;
@@ -36,23 +37,17 @@ public class OrderItemsService
 
     public async Task<IReadOnlyList<TicketItemContractResponse>?> GetItemsAsync(string ticketCen)
     {
-        if (!int.TryParse(ticketCen, out var ticketId))
-            return null;
-
-        var ticket = await _tickets.GetByIdAsync(ticketId);
+        var ticket = await _tickets.GetByCenAsync(ticketCen);
         if (ticket == null)
             return null;
 
-        var items = await _items.GetByOrderIdAsync(ticketId, includeStatus: true);
+        var items = await _items.GetByOrderIdAsync(ticket.Id, includeStatus: true);
         return items.Select(OrderItemMapping.MapToContract).ToList();
     }
 
     public async Task<TicketItemContractResponse?> AddItemAsync(string ticketCen, CreateTicketItemContractRequest request)
     {
-        if (!int.TryParse(ticketCen, out var ticketId))
-            return null;
-
-        var ticket = await _tickets.GetByIdAsync(ticketId, includeStatus: true);
+        var ticket = await _tickets.GetByCenAsync(ticketCen, includeStatus: true);
         if (ticket == null)
             return null;
 
@@ -74,7 +69,7 @@ public class OrderItemsService
 
         var item = _items.Add(new OrderItem
         {
-            OrderId = ticketId,
+            OrderId = ticket.Id,
             ProductCen = product.ProductCen,
             ProductName = product.Name,
             UnitPrice = product.SalePrice,
@@ -83,6 +78,9 @@ public class OrderItemsService
             StatusId = pendingStatusId,
             ResendCount = 0
         });
+        await _uow.SaveChangesAsync();
+
+        item.Cen = SalesCenBuilder.BuildItemCen(item.Id);
         await _uow.SaveChangesAsync();
 
         var saved = await _items.GetByIdAsync(item.Id, includeStatus: true);
@@ -94,11 +92,12 @@ public class OrderItemsService
         string ticketItemCen,
         UpdateTicketItemContractRequest request)
     {
-        if (!int.TryParse(ticketCen, out var ticketId) || !int.TryParse(ticketItemCen, out var itemId))
+        var ticket = await _tickets.GetByCenAsync(ticketCen);
+        if (ticket == null)
             return null;
 
-        var item = await _items.GetByIdAsync(itemId, includeStatus: true);
-        if (item == null || item.OrderId != ticketId)
+        var item = await _items.GetByCenAsync(ticketItemCen, includeStatus: true);
+        if (item == null || item.OrderId != ticket.Id)
             return null;
 
         if (request.Quantity.HasValue)
@@ -113,11 +112,12 @@ public class OrderItemsService
 
     public async Task<TicketItemContractResponse?> ResendItemAsync(string ticketCen, string ticketItemCen)
     {
-        if (!int.TryParse(ticketCen, out var ticketId) || !int.TryParse(ticketItemCen, out var itemId))
+        var ticket = await _tickets.GetByCenAsync(ticketCen);
+        if (ticket == null)
             return null;
 
-        var item = await _items.GetByIdAsync(itemId, includeStatus: true);
-        if (item == null || item.OrderId != ticketId)
+        var item = await _items.GetByCenAsync(ticketItemCen, includeStatus: true);
+        if (item == null || item.OrderId != ticket.Id)
             return null;
 
         var pendingStatusId = await _statuses.GetPendingStatusIdAsync();
@@ -125,10 +125,10 @@ public class OrderItemsService
         item.ResendCount++;
         item.SentAt = null;
 
-        await _commandItems.RemoveByOrderItemIdAsync(itemId);
+        await _commandItems.RemoveByOrderItemIdAsync(item.Id);
         await _uow.SaveChangesAsync();
 
-        var updated = await _items.GetByIdAsync(itemId, includeStatus: true);
+        var updated = await _items.GetByIdAsync(item.Id, includeStatus: true);
         return updated == null ? null : OrderItemMapping.MapToContract(updated);
     }
 }

@@ -66,8 +66,8 @@ public class KdsService
 
         return commandItems.Select(ci => new KdsItemContractResponse
         {
-            TicketItemCen = ci.OrderItem!.Id.ToString(),
-            TicketCen = (ci.OrderItem.OrderId ?? 0).ToString(),
+            TicketItemCen = ci.OrderItem!.Cen ?? ci.OrderItem.Id.ToString(),
+            TicketCen = ci.OrderItem.Order?.Cen ?? (ci.OrderItem.OrderId ?? 0).ToString(),
             ProductCen = ci.OrderItem.ProductCen ?? string.Empty,
             ProductName = ci.OrderItem.ProductName ?? string.Empty,
             Quantity = (int)(ci.OrderItem.Qty ?? 0),
@@ -80,10 +80,7 @@ public class KdsService
 
     public async Task<bool?> UpdateItemStatusAsync(string ticketItemCen, string newStatus)
     {
-        if (!int.TryParse(ticketItemCen, out var orderItemId))
-            return null;
-
-        var item = await _orderItems.GetByIdAsync(orderItemId, includeStatus: true);
+        var item = await _orderItems.GetByCenAsync(ticketItemCen, includeStatus: true);
         if (item == null)
             return null;
 

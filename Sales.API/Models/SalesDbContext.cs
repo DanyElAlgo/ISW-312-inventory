@@ -66,6 +66,7 @@ public partial class SalesDbContext : DbContext
             entity.HasKey(e => e.Id).HasName("order_ticket_pkey");
             entity.ToTable("order_ticket", schema);
             entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Cen).HasMaxLength(64).HasColumnName("cen");
             entity.Property(e => e.CustomerId).HasColumnName("customer_id");
             entity.Property(e => e.StatusId).HasColumnName("status_id");
             entity.Property(e => e.TaxRateSnapshot)
@@ -97,6 +98,7 @@ public partial class SalesDbContext : DbContext
             entity.HasKey(e => e.Id).HasName("order_item_pkey");
             entity.ToTable("order_item", schema);
             entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Cen).HasMaxLength(64).HasColumnName("cen");
             entity.Property(e => e.AdditionalNote).HasMaxLength(255).HasColumnName("additional_note");
             entity.Property(e => e.OrderId).HasColumnName("order_id");
             entity.Property(e => e.ProductId).HasColumnName("product_id");

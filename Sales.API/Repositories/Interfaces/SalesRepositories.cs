@@ -5,6 +5,7 @@ namespace Sales.API.Repositories.Interfaces;
 public interface IOrderTicketRepository
 {
     Task<OrderTicket?> GetByIdAsync(int id, bool includeItems = false, bool includeStatus = false);
+    Task<OrderTicket?> GetByCenAsync(string cen, bool includeItems = false, bool includeStatus = false);
     Task<IReadOnlyList<OrderTicket>> GetByStatusAsync(int statusId, bool includeItems = false, bool includeStatus = false);
     Task<int> CountByCreatedAtRangeAsync(DateTime fromInclusive, DateTime toExclusive);
     OrderTicket Add(OrderTicket ticket);
@@ -13,6 +14,7 @@ public interface IOrderTicketRepository
 public interface IOrderItemRepository
 {
     Task<OrderItem?> GetByIdAsync(int id, bool includeStatus = false);
+    Task<OrderItem?> GetByCenAsync(string cen, bool includeStatus = false);
     Task<IReadOnlyList<OrderItem>> GetByOrderIdAsync(int orderId, bool includeStatus = false);
     Task<IReadOnlyList<OrderItem>> GetUnsentByOrderIdAsync(int orderId, bool includeStatus = false);
     OrderItem Add(OrderItem item);
