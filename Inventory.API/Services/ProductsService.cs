@@ -263,7 +263,7 @@ public class ProductsService : InventoryServiceBase
 
                 return new SellableProductDto
                 {
-                    ProductCen = p.Cen ?? BuildCen("PROD", p.Id),
+                    ProductCen = p.Cen ?? BuildCen("PRD", p.Id),
                     Name = p.Name ?? string.Empty,
                     CategoryCen = p.Category?.Cen ?? string.Empty,
                     CategoryName = p.Category?.Name ?? string.Empty,

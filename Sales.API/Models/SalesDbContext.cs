@@ -14,6 +14,7 @@ public partial class SalesDbContext : DbContext
     }
 
     public virtual DbSet<Customer> Customers { get; set; }
+    public virtual DbSet<DefaultWarehouse> DefaultWarehouses { get; set; }
     public virtual DbSet<GlobalTaxConfig> GlobalTaxConfigs { get; set; }
     public virtual DbSet<OrderCommand> OrderCommands { get; set; }
     public virtual DbSet<CommandItem> CommandItems { get; set; }
@@ -42,6 +43,14 @@ public partial class SalesDbContext : DbContext
             entity.Property(e => e.Phone).HasMaxLength(50).HasColumnName("phone");
         });
 
+        modelBuilder.Entity<DefaultWarehouse>(entity =>
+        {
+            entity.HasKey(e => e.CompanyCen).HasName("default_warehouse_pkey");
+            entity.ToTable("default_warehouse", schema);
+            entity.Property(e => e.CompanyCen).HasMaxLength(64).HasColumnName("company_cen");
+            entity.Property(e => e.WarehouseCen).HasMaxLength(64).HasColumnName("warehouse_cen");
+        });
+
         modelBuilder.Entity<GlobalTaxConfig>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("global_tax_config_pkey");
@@ -67,6 +76,8 @@ public partial class SalesDbContext : DbContext
             entity.ToTable("order_ticket", schema);
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.Cen).HasMaxLength(64).HasColumnName("cen");
+            entity.Property(e => e.CompanyCen).HasMaxLength(64).HasColumnName("company_cen");
+            entity.Property(e => e.WarehouseCen).HasMaxLength(64).HasColumnName("warehouse_cen");
             entity.Property(e => e.CustomerId).HasColumnName("customer_id");
             entity.Property(e => e.StatusId).HasColumnName("status_id");
             entity.Property(e => e.TaxRateSnapshot)

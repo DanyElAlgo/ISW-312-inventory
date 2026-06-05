@@ -31,7 +31,7 @@ public class TicketPaymentsContractController : ControllerBase
 
         try
         {
-            var (success, conflict) = await _paymentsService.PayTicketAsync(ticketCen, request.PaymentMethodCode);
+            var (success, conflict) = await _paymentsService.PayTicketAsync(companyCen, ticketCen, request.PaymentMethodCode);
 
             if (conflict != null)
                 return Conflict(conflict);

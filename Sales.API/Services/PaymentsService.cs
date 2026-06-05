@@ -38,11 +38,21 @@ public class PaymentsService
     }
 
     public async Task<(PayTicketContractResponse? success, ProcessRestaurantOrderPaymentResultDto? conflict)>
-        PayTicketAsync(string ticketCen, string paymentMethodCode)
+        PayTicketAsync(string companyCen, string ticketCen, string paymentMethodCode)
     {
         var ticket = await _tickets.GetByCenAsync(ticketCen, includeItems: true, includeStatus: true);
         if (ticket == null)
             throw new InvalidOperationException("Ticket not found.");
+
+        // Multi-tenant guard: the ticket belongs to the company it was opened for.
+        if (!string.Equals(ticket.CompanyCen, companyCen, StringComparison.Ordinal))
+            throw new InvalidOperationException("Ticket does not belong to this company.");
+
+        if (string.IsNullOrWhiteSpace(ticket.WarehouseCen))
+            throw new InvalidOperationException("Ticket has no warehouse assigned.");
+
+        var ticketCompanyCen = ticket.CompanyCen!;
+        var ticketWarehouseCen = ticket.WarehouseCen!;
 
         var statusName = ticket.Status?.Name?.ToLower() ?? "";
         if (statusName is not ("open" or "abierto"))
@@ -62,7 +72,7 @@ public class PaymentsService
 
         var validateDto = new StockValidationRequest
         {
-            WarehouseCen = _integrationOptions.WarehouseCen,
+            WarehouseCen = ticketWarehouseCen,
             Source = _integrationOptions.Source,
             ReferenceCen = BuildAccountNumber(ticket.Id),
             Items = items.Select(i => new StockValidationItemDto
@@ -72,7 +82,7 @@ public class PaymentsService
             }).ToList()
         };
 
-        var validation = await _inventoryClient.ValidateStockAsync(_integrationOptions.CompanyCen, validateDto);
+        var validation = await _inventoryClient.ValidateStockAsync(ticketCompanyCen, validateDto);
         if (validation == null)
             throw new InvalidOperationException("Could not validate stock.");
 
@@ -102,7 +112,7 @@ public class PaymentsService
 
         var consumeDto = new StockConsumeRequest
         {
-            WarehouseCen = _integrationOptions.WarehouseCen,
+            WarehouseCen = ticketWarehouseCen,
             Source = _integrationOptions.Source,
             ReferenceCen = BuildAccountNumber(ticket.Id),
             Reason = $"Sale — ticket #{ticket.Id}",
@@ -113,7 +123,7 @@ public class PaymentsService
             }).ToList()
         };
 
-        var deduction = await _inventoryClient.ConsumeStockAsync(_integrationOptions.CompanyCen, consumeDto);
+        var deduction = await _inventoryClient.ConsumeStockAsync(ticketCompanyCen, consumeDto);
         if (deduction == null || !deduction.Success)
             throw new InvalidOperationException(deduction?.Message ?? "Stock deduction failed.");
 
@@ -121,7 +131,7 @@ public class PaymentsService
         {
             OrderId = ticket.Id,
             PaymentTypeId = paymentType.Id,
-            PaidAt = DateTime.UtcNow
+            PaidAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Unspecified)
         });
         ticket.StatusId = await _statuses.GetPaidStatusIdAsync();
         await _uow.SaveChangesAsync();

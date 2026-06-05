@@ -140,10 +140,17 @@ INSERT INTO sales.station_coverage (station_type_id, category_id) VALUES
     (1, 5),
     (2, 4);
 
-INSERT INTO sales.order_ticket (customer_id, status_id, tax_rate_snapshot, created_at, daily_number) VALUES
-    (1, 1, 0.18, NOW(), 1),
-    (2, 5, 0.18, NOW() - INTERVAL '1 hour',  2),
-    (3, 1, 0.18, NOW() - INTERVAL '30 minutes', 3);
+-- Default warehouse per company, used when a ticket is created without an explicit warehouseCen.
+INSERT INTO sales.default_warehouse (company_cen, warehouse_cen) VALUES
+    ('BUS-000001', 'WAR-000001'),
+    ('BUS-000002', 'WAR-000003'),
+    ('BUS-000003', 'WAR-000005');
+
+-- Sample tickets belong to Fresh Foods Market (BUS-000002) / Fresh Market Warehouse A (WAR-000003).
+INSERT INTO sales.order_ticket (company_cen, warehouse_cen, customer_id, status_id, tax_rate_snapshot, created_at, daily_number) VALUES
+    ('BUS-000002', 'WAR-000003', 1, 1, 0.18, NOW(), 1),
+    ('BUS-000002', 'WAR-000003', 2, 5, 0.18, NOW() - INTERVAL '1 hour',  2),
+    ('BUS-000002', 'WAR-000003', 3, 1, 0.18, NOW() - INTERVAL '30 minutes', 3);
 
 INSERT INTO sales.order_item (qty, additional_note, order_id, product_cen, product_name, unit_price, status_id) VALUES
     (2, NULL,                       1, 'PRD-000004', 'Organic Apples',     4.50, 2),

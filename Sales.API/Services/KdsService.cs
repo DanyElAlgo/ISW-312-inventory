@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Options;
 using Sales.API.DTOs;
 using Sales.API.HttpClients;
 using Sales.API.Repositories.Interfaces;
@@ -12,7 +11,6 @@ public class KdsService
     private readonly ICommandItemRepository _commandItems;
     private readonly IOrderItemRepository _orderItems;
     private readonly InventoryClient _inventoryClient;
-    private readonly InventoryIntegrationOptions _integrationOptions;
     private readonly OrderStatusesService _statuses;
     private readonly ISalesUnitOfWork _uow;
 
@@ -22,7 +20,6 @@ public class KdsService
         ICommandItemRepository commandItems,
         IOrderItemRepository orderItems,
         InventoryClient inventoryClient,
-        IOptions<InventoryIntegrationOptions> integrationOptions,
         OrderStatusesService statuses,
         ISalesUnitOfWork uow)
     {
@@ -31,7 +28,6 @@ public class KdsService
         _commandItems = commandItems;
         _orderItems = orderItems;
         _inventoryClient = inventoryClient;
-        _integrationOptions = integrationOptions.Value;
         _statuses = statuses;
         _uow = uow;
     }
@@ -99,9 +95,9 @@ public class KdsService
         return true;
     }
 
-    public async Task<int?> ResolveStationForProductAsync(string productCen)
+    public async Task<int?> ResolveStationForProductAsync(string companyCen, string productCen)
     {
-        var product = await _inventoryClient.GetProductAsync(_integrationOptions.CompanyCen, productCen);
+        var product = await _inventoryClient.GetProductAsync(companyCen, productCen);
         if (product == null || string.IsNullOrWhiteSpace(product.StationCode))
             return null;
 

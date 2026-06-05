@@ -106,7 +106,7 @@ public abstract class InventoryServiceBase
     {
         return new WarehouseDto
         {
-            WarehouseCen = warehouse.Cen ?? BuildCen("WH", warehouse.Id),
+            WarehouseCen = warehouse.Cen ?? BuildCen("WAR", warehouse.Id),
             Name = warehouse.Name ?? string.Empty,
             IsActive = warehouse.IsActive
         };
@@ -116,8 +116,8 @@ public abstract class InventoryServiceBase
     {
         return new ProductDto
         {
-            ProductCen = product.Cen ?? BuildCen("PROD", product.Id),
-            Sku = product.Sku ?? product.Cen ?? BuildCen("PROD", product.Id),
+            ProductCen = product.Cen ?? BuildCen("PRD", product.Id),
+            Sku = product.Sku ?? product.Cen ?? BuildCen("PRD", product.Id),
             Name = product.Name ?? string.Empty,
             Description = product.Description,
             CategoryCen = product.Category?.Cen ?? string.Empty,

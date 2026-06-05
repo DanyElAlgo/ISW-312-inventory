@@ -37,6 +37,7 @@ builder.Services.AddScoped<IWaiterRepository, WaiterRepository>();
 builder.Services.AddScoped<IGlobalTaxConfigRepository, GlobalTaxConfigRepository>();
 builder.Services.AddScoped<IOrderCommandRepository, OrderCommandRepository>();
 builder.Services.AddScoped<ICommandItemRepository, CommandItemRepository>();
+builder.Services.AddScoped<IDefaultWarehouseRepository, DefaultWarehouseRepository>();
 builder.Services.AddScoped<ISalesUnitOfWork, SalesUnitOfWork>();
 
 // Per-entity services
@@ -45,6 +46,7 @@ builder.Services.AddScoped<WaitersService>();
 builder.Services.AddScoped<PaymentMethodsService>();
 builder.Services.AddScoped<TaxConfigurationService>();
 builder.Services.AddScoped<CatalogService>();
+builder.Services.AddScoped<DefaultWarehouseService>();
 builder.Services.AddScoped<OrderTicketsService>();
 builder.Services.AddScoped<OrderItemsService>();
 builder.Services.AddScoped<KdsService>();

@@ -14,6 +14,7 @@ public class OrderTicketsService
     private readonly IWaiterRepository _waiters;
     private readonly IGlobalTaxConfigRepository _taxConfig;
     private readonly OrderStatusesService _statuses;
+    private readonly DefaultWarehouseService _defaultWarehouses;
     private readonly ISalesUnitOfWork _uow;
 
     public OrderTicketsService(
@@ -23,6 +24,7 @@ public class OrderTicketsService
         IWaiterRepository waiters,
         IGlobalTaxConfigRepository taxConfig,
         OrderStatusesService statuses,
+        DefaultWarehouseService defaultWarehouses,
         ISalesUnitOfWork uow)
     {
         _tickets = tickets;
@@ -31,13 +33,14 @@ public class OrderTicketsService
         _waiters = waiters;
         _taxConfig = taxConfig;
         _statuses = statuses;
+        _defaultWarehouses = defaultWarehouses;
         _uow = uow;
     }
 
     public async Task<IReadOnlyList<TicketContractResponse>> GetTicketsAsync(string companyCen)
     {
         var openStatusId = await _statuses.GetOpenStatusIdAsync();
-        var tickets = await _tickets.GetByStatusAsync(openStatusId, includeItems: true, includeStatus: true);
+        var tickets = await _tickets.GetByStatusAndCompanyAsync(openStatusId, companyCen, includeItems: true, includeStatus: true);
 
         var result = new List<TicketContractResponse>();
         foreach (var t in tickets)
@@ -48,6 +51,10 @@ public class OrderTicketsService
 
     public async Task<TicketContractResponse?> CreateTicketAsync(string companyCen, CreateTicketContractRequest request)
     {
+        // warehouseCen is optional on the contract: when omitted, resolve a default
+        // (configured per-company → first active Inventory warehouse). Throws if none.
+        var warehouseCen = await _defaultWarehouses.ResolveWarehouseAsync(companyCen, request.WarehouseCen);
+
         var openStatusId = await _statuses.GetOpenStatusIdAsync();
         var taxConfig = await _taxConfig.GetOrCreateAsync();
 
@@ -56,6 +63,8 @@ public class OrderTicketsService
 
         var ticket = _tickets.Add(new OrderTicket
         {
+            CompanyCen = companyCen,
+            WarehouseCen = warehouseCen,
             StatusId = openStatusId,
             TaxRateSnapshot = taxConfig.TaxRate,
             CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Unspecified),
@@ -247,7 +256,8 @@ public class OrderTicketsService
             Status = ticket.Status?.Name ?? "Open",
             CreatedAt = ticket.CreatedAt.ToString("O"),
             WaiterCen = waiter?.Id.ToString(),
-            CompanyCen = companyCen,
+            CompanyCen = ticket.CompanyCen ?? companyCen,
+            WarehouseCen = ticket.WarehouseCen,
             TaxAmount = taxAmount
         };
     }

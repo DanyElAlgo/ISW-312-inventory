@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Sales.API.Models;
@@ -11,9 +12,11 @@ using Sales.API.Models;
 namespace Sales.API.Migrations
 {
     [DbContext(typeof(SalesDbContext))]
-    partial class SalesDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260603152427_AddTicketTenantColumns")]
+    partial class AddTicketTenantColumns
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -76,25 +79,6 @@ namespace Sales.API.Migrations
                         .HasName("customer_pkey");
 
                     b.ToTable("customer", "sales");
-                });
-
-            modelBuilder.Entity("Sales.API.Models.DefaultWarehouse", b =>
-                {
-                    b.Property<string>("CompanyCen")
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)")
-                        .HasColumnName("company_cen");
-
-                    b.Property<string>("WarehouseCen")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)")
-                        .HasColumnName("warehouse_cen");
-
-                    b.HasKey("CompanyCen")
-                        .HasName("default_warehouse_pkey");
-
-                    b.ToTable("default_warehouse", "sales");
                 });
 
             modelBuilder.Entity("Sales.API.Models.GlobalTaxConfig", b =>

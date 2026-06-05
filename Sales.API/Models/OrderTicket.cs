@@ -6,6 +6,10 @@ public partial class OrderTicket
 
     public string? Cen { get; set; }
 
+    public string? CompanyCen { get; set; }
+
+    public string? WarehouseCen { get; set; }
+
     public int? CustomerId { get; set; }
 
     public int? StatusId { get; set; }

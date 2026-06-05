@@ -7,6 +7,7 @@ public interface IOrderTicketRepository
     Task<OrderTicket?> GetByIdAsync(int id, bool includeItems = false, bool includeStatus = false);
     Task<OrderTicket?> GetByCenAsync(string cen, bool includeItems = false, bool includeStatus = false);
     Task<IReadOnlyList<OrderTicket>> GetByStatusAsync(int statusId, bool includeItems = false, bool includeStatus = false);
+    Task<IReadOnlyList<OrderTicket>> GetByStatusAndCompanyAsync(int statusId, string companyCen, bool includeItems = false, bool includeStatus = false);
     Task<int> CountByCreatedAtRangeAsync(DateTime fromInclusive, DateTime toExclusive);
     OrderTicket Add(OrderTicket ticket);
 }
@@ -63,6 +64,12 @@ public interface IWaiterRepository
 public interface IGlobalTaxConfigRepository
 {
     Task<GlobalTaxConfig> GetOrCreateAsync();
+}
+
+public interface IDefaultWarehouseRepository
+{
+    Task<DefaultWarehouse?> GetByCompanyAsync(string companyCen);
+    DefaultWarehouse Add(DefaultWarehouse row);
 }
 
 public interface IOrderCommandRepository

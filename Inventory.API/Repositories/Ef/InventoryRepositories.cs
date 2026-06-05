@@ -29,7 +29,7 @@ public sealed class BusinessRepository : IBusinessRepository
         {
             if (string.IsNullOrWhiteSpace(business.Cen))
             {
-                business.Cen = InventoryCenBuilder.Build("COMP", business.Id);
+                business.Cen = InventoryCenBuilder.Build("BUS", business.Id);
                 updated = true;
             }
         }
@@ -49,7 +49,7 @@ public sealed class BusinessRepository : IBusinessRepository
 
         if (business != null && string.IsNullOrWhiteSpace(business.Cen))
         {
-            business.Cen = InventoryCenBuilder.Build("COMP", business.Id);
+            business.Cen = InventoryCenBuilder.Build("BUS", business.Id);
             await _context.SaveChangesAsync();
         }
 
@@ -188,7 +188,7 @@ public sealed class WarehouseRepository : IWarehouseRepository
         {
             if (string.IsNullOrWhiteSpace(warehouse.Cen))
             {
-                warehouse.Cen = InventoryCenBuilder.Build("WH", warehouse.Id);
+                warehouse.Cen = InventoryCenBuilder.Build("WAR", warehouse.Id);
                 updated = true;
             }
         }
@@ -209,7 +209,7 @@ public sealed class WarehouseRepository : IWarehouseRepository
 
         if (warehouse != null && string.IsNullOrWhiteSpace(warehouse.Cen))
         {
-            warehouse.Cen = InventoryCenBuilder.Build("WH", warehouse.Id);
+            warehouse.Cen = InventoryCenBuilder.Build("WAR", warehouse.Id);
             await _context.SaveChangesAsync();
         }
 
@@ -260,7 +260,7 @@ public sealed class ProductRepository : IProductRepository
             if (string.IsNullOrWhiteSpace(product.Cen))
             {
                 product.Cen = string.IsNullOrWhiteSpace(product.Sku)
-                    ? InventoryCenBuilder.Build("PROD", product.Id)
+                    ? InventoryCenBuilder.Build("PRD", product.Id)
                     : product.Sku;
                 updated = true;
             }
@@ -303,7 +303,7 @@ public sealed class ProductRepository : IProductRepository
         if (product != null && string.IsNullOrWhiteSpace(product.Cen))
         {
             product.Cen = string.IsNullOrWhiteSpace(product.Sku)
-                ? InventoryCenBuilder.Build("PROD", product.Id)
+                ? InventoryCenBuilder.Build("PRD", product.Id)
                 : product.Sku;
             updated = true;
         }
@@ -364,14 +364,14 @@ public sealed class WarehouseProductRepository : IWarehouseProductRepository
             if (item.Product != null && string.IsNullOrWhiteSpace(item.Product.Cen))
             {
                 item.Product.Cen = string.IsNullOrWhiteSpace(item.Product.Sku)
-                    ? InventoryCenBuilder.Build("PROD", item.Product.Id)
+                    ? InventoryCenBuilder.Build("PRD", item.Product.Id)
                     : item.Product.Sku;
                 updated = true;
             }
 
             if (item.Warehouse != null && string.IsNullOrWhiteSpace(item.Warehouse.Cen))
             {
-                item.Warehouse.Cen = InventoryCenBuilder.Build("WH", item.Warehouse.Id);
+                item.Warehouse.Cen = InventoryCenBuilder.Build("WAR", item.Warehouse.Id);
                 updated = true;
             }
         }

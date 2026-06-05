@@ -30,6 +30,24 @@ public class InventoryClient
         }
     }
 
+    public async Task<List<InventoryWarehouseDto>?> GetWarehousesAsync(string companyCen)
+    {
+        try
+        {
+            var response = await _http.GetAsync($"api/inventory/companies/{companyCen}/warehouses");
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                return null;
+
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadFromJsonAsync<List<InventoryWarehouseDto>>();
+        }
+        catch (HttpRequestException)
+        {
+            throw new InvalidOperationException(
+                "Inventory service is unavailable. Cannot fetch warehouses at this time.");
+        }
+    }
+
     public async Task<List<InventoryStockItemDto>?> GetStockAsync(string companyCen, string? productCen, string? warehouseCen)
     {
         try

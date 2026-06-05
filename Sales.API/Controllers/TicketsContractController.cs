@@ -35,16 +35,24 @@ public class TicketsContractController : ControllerBase
     /// <summary>Crea un ticket</summary>
     [HttpPost("api/sales/companies/{companyCen}/tickets")]
     [ProducesResponseType(typeof(TicketContractResponse), 201)]
+    [ProducesResponseType(400)]
     [ProducesResponseType(404)]
     public async Task<IActionResult> CreateTicket(
         string companyCen,
         [FromBody] CreateTicketContractRequest request)
     {
-        var result = await _ticketsService.CreateTicketAsync(companyCen, request);
-        if (result == null)
-            return NotFound();
+        try
+        {
+            var result = await _ticketsService.CreateTicketAsync(companyCen, request);
+            if (result == null)
+                return NotFound();
 
-        return CreatedAtAction(nameof(GetTickets), new { companyCen }, result);
+            return CreatedAtAction(nameof(GetTickets), new { companyCen }, result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     /// <summary>Lista items de un ticket</summary>
@@ -129,7 +137,7 @@ public class TicketsContractController : ControllerBase
         {
             var result = await _ticketsService.SendTicketToKitchenAsync(
                 ticketCen,
-                _kdsService.ResolveStationForProductAsync);
+                productCen => _kdsService.ResolveStationForProductAsync(companyCen, productCen));
             if (result == null)
                 return NotFound();
             return Ok(result);

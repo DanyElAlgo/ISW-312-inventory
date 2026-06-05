@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Options;
 using Sales.API.DTOs;
 using Sales.API.Helpers;
 using Sales.API.HttpClients;
@@ -13,7 +12,6 @@ public class OrderItemsService
     private readonly IOrderTicketRepository _tickets;
     private readonly ICommandItemRepository _commandItems;
     private readonly InventoryClient _inventoryClient;
-    private readonly InventoryIntegrationOptions _integrationOptions;
     private readonly OrderStatusesService _statuses;
     private readonly ISalesUnitOfWork _uow;
 
@@ -22,7 +20,6 @@ public class OrderItemsService
         IOrderTicketRepository tickets,
         ICommandItemRepository commandItems,
         InventoryClient inventoryClient,
-        IOptions<InventoryIntegrationOptions> integrationOptions,
         OrderStatusesService statuses,
         ISalesUnitOfWork uow)
     {
@@ -30,7 +27,6 @@ public class OrderItemsService
         _tickets = tickets;
         _commandItems = commandItems;
         _inventoryClient = inventoryClient;
-        _integrationOptions = integrationOptions.Value;
         _statuses = statuses;
         _uow = uow;
     }
@@ -55,7 +51,10 @@ public class OrderItemsService
         if (statusName is not ("open" or "abierto"))
             throw new InvalidOperationException("Ticket is not open.");
 
-        var product = await _inventoryClient.GetProductAsync(_integrationOptions.CompanyCen, request.ProductCen);
+        if (string.IsNullOrWhiteSpace(ticket.CompanyCen))
+            throw new InvalidOperationException("Ticket has no company assigned.");
+
+        var product = await _inventoryClient.GetProductAsync(ticket.CompanyCen, request.ProductCen);
         if (product == null)
             throw new InvalidOperationException("Product not found.");
 

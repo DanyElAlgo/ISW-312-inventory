@@ -24,6 +24,13 @@ public sealed class InventorySellableProductDto
     public string? StationCode { get; set; }
 }
 
+public sealed class InventoryWarehouseDto
+{
+    public string WarehouseCen { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public bool IsActive { get; set; }
+}
+
 public sealed class InventoryStockItemDto
 {
     public string ProductCen { get; set; } = string.Empty;

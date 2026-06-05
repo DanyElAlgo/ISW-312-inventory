@@ -1,6 +1,5 @@
 using Sales.API.DTOs;
 using Sales.API.HttpClients;
-using Microsoft.Extensions.Options;
 
 namespace Sales.API.Services;
 
@@ -8,7 +7,7 @@ public class CatalogService
 {
     private readonly InventoryClient _inventoryClient;
 
-    public CatalogService(InventoryClient inventoryClient, IOptions<InventoryIntegrationOptions> _)
+    public CatalogService(InventoryClient inventoryClient)
     {
         _inventoryClient = inventoryClient;
     }

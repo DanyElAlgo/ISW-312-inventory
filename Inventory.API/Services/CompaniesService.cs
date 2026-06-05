@@ -25,7 +25,7 @@ public class CompaniesService : InventoryServiceBase
 
         return businesses.Select(b => new CompanyDto
         {
-            CompanyCen = b.Cen ?? BuildCen("COMP", b.Id),
+            CompanyCen = b.Cen ?? BuildCen("BUS", b.Id),
             Name = b.Name ?? string.Empty,
             IsActive = b.IsActive
         }).ToList();
@@ -40,7 +40,7 @@ public class CompaniesService : InventoryServiceBase
         return new CompanyLookupContractDto
         {
             CompanyId = business.Id,
-            CompanyCen = business.Cen ?? BuildCen("COMP", business.Id),
+            CompanyCen = business.Cen ?? BuildCen("BUS", business.Id),
             Name = business.Name ?? string.Empty
         };
     }
@@ -60,7 +60,7 @@ public class CompaniesService : InventoryServiceBase
 
         return new InventoryDashboardDto
         {
-            CompanyCen = business.Cen ?? BuildCen("COMP", business.Id),
+            CompanyCen = business.Cen ?? BuildCen("BUS", business.Id),
             TotalProducts = totalProducts,
             TotalStockQuantity = totalStockQuantity,
             LowStockCount = lowStockCount,

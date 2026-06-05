@@ -196,8 +196,15 @@ CREATE TABLE sales.global_tax_config (
     tax_rate NUMERIC(7,4) NOT NULL DEFAULT 0
 );
 
+CREATE TABLE sales.default_warehouse (
+    company_cen   VARCHAR(64) PRIMARY KEY,
+    warehouse_cen VARCHAR(64) NOT NULL
+);
+
 CREATE TABLE sales.order_ticket (
     id                  SERIAL PRIMARY KEY,
+    company_cen         VARCHAR(64),
+    warehouse_cen       VARCHAR(64),
     customer_id         INT,
     status_id           INT,
     tax_rate_snapshot   NUMERIC(7,4) NOT NULL DEFAULT 0,

@@ -99,12 +99,28 @@ public class TicketContractResponse
     public string CreatedAt { get; set; } = string.Empty;
     public string? WaiterCen { get; set; }
     public string? CompanyCen { get; set; }
+    public string? WarehouseCen { get; set; }
     public decimal TaxAmount { get; set; }
 }
 
 public class CreateTicketContractRequest
 {
     public string? WaiterCen { get; set; }
+
+    // Optional: when omitted, Sales resolves a default warehouse for the company
+    // (configured default → first active warehouse) so contract-only clients work.
+    public string? WarehouseCen { get; set; }
+}
+
+public class DefaultWarehouseContractResponse
+{
+    public string CompanyCen { get; set; } = string.Empty;
+    public string WarehouseCen { get; set; } = string.Empty;
+}
+
+public class SetDefaultWarehouseContractRequest
+{
+    public string WarehouseCen { get; set; } = string.Empty;
 }
 
 public class CancelTicketContractRequest

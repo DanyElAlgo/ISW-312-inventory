@@ -47,6 +47,17 @@ public sealed class OrderTicketRepository : IOrderTicketRepository
         return await query.ToListAsync();
     }
 
+    public async Task<IReadOnlyList<OrderTicket>> GetByStatusAndCompanyAsync(int statusId, string companyCen, bool includeItems = false, bool includeStatus = false)
+    {
+        IQueryable<OrderTicket> query = _context.OrderTickets
+            .Where(t => t.StatusId == statusId && t.CompanyCen == companyCen);
+        if (includeStatus)
+            query = query.Include(t => t.Status);
+        if (includeItems)
+            query = query.Include(t => t.OrderItems);
+        return await query.ToListAsync();
+    }
+
     public async Task<int> CountByCreatedAtRangeAsync(DateTime fromInclusive, DateTime toExclusive)
     {
         return await _context.OrderTickets
@@ -289,6 +300,21 @@ public sealed class GlobalTaxConfigRepository : IGlobalTaxConfigRepository
         await _context.SaveChangesAsync();
         return config;
     }
+}
+
+public sealed class DefaultWarehouseRepository : IDefaultWarehouseRepository
+{
+    private readonly SalesDbContext _context;
+
+    public DefaultWarehouseRepository(SalesDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task<DefaultWarehouse?> GetByCompanyAsync(string companyCen) =>
+        await _context.DefaultWarehouses.FirstOrDefaultAsync(d => d.CompanyCen == companyCen);
+
+    public DefaultWarehouse Add(DefaultWarehouse row) => _context.DefaultWarehouses.Add(row).Entity;
 }
 
 public sealed class OrderCommandRepository : IOrderCommandRepository

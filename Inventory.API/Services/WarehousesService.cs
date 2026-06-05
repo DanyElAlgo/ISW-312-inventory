@@ -49,7 +49,7 @@ public class WarehousesService : InventoryServiceBase
         await WarehouseRepository.AddAsync(warehouse);
         await Context.SaveChangesAsync();
 
-        warehouse.Cen = BuildCen("WH", warehouse.Id);
+        warehouse.Cen = BuildCen("WAR", warehouse.Id);
         await Context.SaveChangesAsync();
 
         return MapWarehouse(warehouse);
