@@ -171,3 +171,26 @@ UPDATE sales.order_item SET sent_at = NOW() WHERE id IN (1, 2, 4);
 
 INSERT INTO sales.payment (order_id, payment_type_id, paid_at) VALUES
     (2, 1, NOW() - INTERVAL '50 minutes');
+
+-- =========================
+-- Purchases Module
+-- =========================
+
+INSERT INTO purchases.purchase_status (name, description) VALUES
+    ('Pending',   'Order created, not yet confirmed'),
+    ('Confirmed', 'Order confirmed and stock received'),
+    ('Cancelled', 'Order cancelled before confirmation');
+
+-- Suppliers for the demo company (Fresh Foods, BUS-000002 -> business_id = 2)
+INSERT INTO purchases.supplier (business_id, name, cen, contact_email, contact_phone) VALUES
+    (2, 'Distribuidora La Pradera', 'SUP-000001', 'ventas@lapradera.test',     '555-0101'),
+    (2, 'Lácteos del Valle',        'SUP-000002', 'pedidos@lacteosvalle.test', '555-0102'),
+    (2, 'Panadería Don Juan',       'SUP-000003', 'contacto@donjuan.test',     '555-0103');
+
+-- A demo Pending purchase order so the UI shows something on first load.
+INSERT INTO purchases.purchase_order (business_id, supplier_id, warehouse_cen, status_id, cen, created_at) VALUES
+    (2, 1, 'WAR-000003', 1, 'PO-000001', NOW() - INTERVAL '1 day');
+
+INSERT INTO purchases.purchase_order_item (purchase_order_id, product_cen, product_name, quantity) VALUES
+    (1, 'PRD-000004', 'Organic Apples',    50),
+    (1, 'PRD-000008', 'Whole Wheat Bread', 30);

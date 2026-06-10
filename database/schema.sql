@@ -290,3 +290,61 @@ CREATE TABLE sales.payment (
     CONSTRAINT payment_payment_type_id_fkey
         FOREIGN KEY (payment_type_id) REFERENCES sales.payment_type (id)
 );
+
+-- =============================================================================
+-- PURCHASES SCHEMA
+-- =============================================================================
+
+CREATE TABLE purchases.purchase_status (
+    id          SERIAL PRIMARY KEY,
+    name        VARCHAR(255),
+    description VARCHAR(255)
+);
+
+CREATE TABLE purchases.supplier (
+    id            SERIAL PRIMARY KEY,
+    business_id   INT NOT NULL,
+    name          VARCHAR(255) NOT NULL,
+    cen           VARCHAR(64),
+    contact_email VARCHAR(255),
+    contact_phone VARCHAR(50),
+    is_active     BOOLEAN NOT NULL DEFAULT TRUE,
+    CONSTRAINT supplier_business_id_fkey
+        FOREIGN KEY (business_id) REFERENCES inventory.business (id)
+);
+
+CREATE UNIQUE INDEX ux_supplier_business_cen
+    ON purchases.supplier (business_id, cen);
+
+CREATE TABLE purchases.purchase_order (
+    id                     SERIAL PRIMARY KEY,
+    business_id            INT NOT NULL,
+    supplier_id            INT NOT NULL,
+    warehouse_cen          VARCHAR(64) NOT NULL,
+    status_id              INT NOT NULL,
+    cen                    VARCHAR(64),
+    created_at             TIMESTAMP NOT NULL DEFAULT NOW(),
+    confirmed_at           TIMESTAMP,
+    cancelled_at           TIMESTAMP,
+    cancellation_reason    VARCHAR(500),
+    inventory_document_cen VARCHAR(64),
+    CONSTRAINT purchase_order_business_id_fkey
+        FOREIGN KEY (business_id) REFERENCES inventory.business (id),
+    CONSTRAINT purchase_order_supplier_id_fkey
+        FOREIGN KEY (supplier_id) REFERENCES purchases.supplier (id),
+    CONSTRAINT purchase_order_status_id_fkey
+        FOREIGN KEY (status_id) REFERENCES purchases.purchase_status (id)
+);
+
+CREATE UNIQUE INDEX ux_purchase_order_business_cen
+    ON purchases.purchase_order (business_id, cen);
+
+CREATE TABLE purchases.purchase_order_item (
+    id                SERIAL PRIMARY KEY,
+    purchase_order_id INT NOT NULL,
+    product_cen       VARCHAR(64) NOT NULL,
+    product_name      VARCHAR(255),
+    quantity          INT NOT NULL,
+    CONSTRAINT purchase_order_item_purchase_order_id_fkey
+        FOREIGN KEY (purchase_order_id) REFERENCES purchases.purchase_order (id)
+);
