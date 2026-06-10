@@ -44,12 +44,6 @@ public sealed class SupplierRepository : ISupplierRepository
         return await _context.Suppliers
             .FirstOrDefaultAsync(s => s.BusinessId == businessId && s.Cen == supplierCen);
     }
-
-    public async Task<Supplier?> GetByIdAsync(int id) => await _context.Suppliers.FindAsync(id);
-
-    public Supplier Add(Supplier supplier) => _context.Suppliers.Add(supplier).Entity;
-
-    public void Remove(Supplier supplier) => _context.Suppliers.Remove(supplier);
 }
 
 public sealed class PurchaseStatusRepository : IPurchaseStatusRepository

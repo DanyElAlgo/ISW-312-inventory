@@ -110,29 +110,4 @@ public class PurchaseOrdersContractController : ControllerBase
             return BadRequest(new { message = ex.Message });
         }
     }
-
-    /// <summary>Cancela una orden de compra (Pending -> Cancelled)</summary>
-    [HttpPost("api/purchases/companies/{companyCen}/orders/{orderCen}/cancel")]
-    [ProducesResponseType(typeof(PurchaseOrderCancellationDto), 200)]
-    [ProducesResponseType(404)]
-    [ProducesResponseType(409)]
-    public async Task<IActionResult> CancelOrder(
-        string companyCen,
-        string orderCen,
-        [FromBody] CancelPurchaseOrderDto? request)
-    {
-        try
-        {
-            var result = await _orders.CancelAsync(companyCen, orderCen, request?.Reason);
-            if (result == null)
-                return NotFound(new { message = "Purchase order not found." });
-            return Ok(result);
-        }
-        catch (InvalidOperationException ex) when (
-            ex.Message.Contains("already cancelled", StringComparison.OrdinalIgnoreCase) ||
-            ex.Message.Contains("Only orders in Pending", StringComparison.OrdinalIgnoreCase))
-        {
-            return Conflict(new { message = ex.Message });
-        }
-    }
 }

@@ -11,9 +11,6 @@ public interface ISupplierRepository
 {
     Task<IReadOnlyList<Supplier>> GetActiveByBusinessIdAsync(int businessId);
     Task<Supplier?> GetByCenAsync(int businessId, string supplierCen);
-    Task<Supplier?> GetByIdAsync(int id);
-    Supplier Add(Supplier supplier);
-    void Remove(Supplier supplier);
 }
 
 public interface IPurchaseStatusRepository

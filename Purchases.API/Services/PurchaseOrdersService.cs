@@ -112,7 +112,7 @@ public class PurchaseOrdersService
             SupplierId = supplier.Id,
             WarehouseCen = request.WarehouseCen.Trim(),
             StatusId = pendingId,
-            CreatedAt = DateTime.UtcNow,
+            CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Unspecified),
         });
         await _uow.SaveChangesAsync();
 
@@ -164,7 +164,7 @@ public class PurchaseOrdersService
         if (order.Items.Count == 0)
             throw new InvalidOperationException("Cannot confirm an order with no items.");
 
-        var confirmedAt = DateTime.UtcNow;
+        var confirmedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Unspecified);
 
         // Wrap status flip + stock increase in a transaction so a failed Inventory call
         // does not leave the order in a Confirmed state without matching stock.
@@ -203,36 +203,6 @@ public class PurchaseOrdersService
             OrderCen = order.Cen!,
             Status = PurchaseStatusesService.ConfirmedExternal,
             ConfirmedAt = confirmedAt,
-        };
-    }
-
-    public async Task<PurchaseOrderCancellationDto?> CancelAsync(string companyCen, string orderCen, string? reason)
-    {
-        var business = await _businesses.GetByCenAsync(companyCen);
-        if (business == null) return null;
-
-        var order = await _orders.GetByCenAsync(business.Id, orderCen);
-        if (order == null) return null;
-
-        var pendingId = await _statuses.GetPendingIdAsync();
-        var cancelledId = await _statuses.GetCancelledIdAsync();
-
-        if (order.StatusId == cancelledId)
-            throw new InvalidOperationException("Order is already cancelled.");
-        if (order.StatusId != pendingId)
-            throw new InvalidOperationException("Only orders in Pending status can be cancelled.");
-
-        var cancelledAt = DateTime.UtcNow;
-        order.StatusId = cancelledId;
-        order.CancelledAt = cancelledAt;
-        order.CancellationReason = reason;
-        await _uow.SaveChangesAsync();
-
-        return new PurchaseOrderCancellationDto
-        {
-            OrderCen = order.Cen!,
-            Status = PurchaseStatusesService.CancelledExternal,
-            CancelledAt = cancelledAt,
         };
     }
 
