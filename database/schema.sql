@@ -295,13 +295,15 @@ CREATE TABLE sales.payment (
 -- PURCHASES SCHEMA
 -- =============================================================================
 
-CREATE TABLE purchases.purchase_status (
+CREATE SCHEMA IF NOT EXISTS purchases;
+
+CREATE TABLE IF NOT EXISTS purchases.purchase_status (
     id          SERIAL PRIMARY KEY,
     name        VARCHAR(255),
     description VARCHAR(255)
 );
 
-CREATE TABLE purchases.supplier (
+CREATE TABLE IF NOT EXISTS purchases.supplier (
     id            SERIAL PRIMARY KEY,
     business_id   INT NOT NULL,
     name          VARCHAR(255) NOT NULL,
@@ -313,10 +315,10 @@ CREATE TABLE purchases.supplier (
         FOREIGN KEY (business_id) REFERENCES inventory.business (id)
 );
 
-CREATE UNIQUE INDEX ux_supplier_business_cen
+CREATE UNIQUE INDEX IF NOT EXISTS ux_supplier_business_cen
     ON purchases.supplier (business_id, cen);
 
-CREATE TABLE purchases.purchase_order (
+CREATE TABLE IF NOT EXISTS purchases.purchase_order (
     id                     SERIAL PRIMARY KEY,
     business_id            INT NOT NULL,
     supplier_id            INT NOT NULL,
@@ -336,10 +338,10 @@ CREATE TABLE purchases.purchase_order (
         FOREIGN KEY (status_id) REFERENCES purchases.purchase_status (id)
 );
 
-CREATE UNIQUE INDEX ux_purchase_order_business_cen
+CREATE UNIQUE INDEX IF NOT EXISTS ux_purchase_order_business_cen
     ON purchases.purchase_order (business_id, cen);
 
-CREATE TABLE purchases.purchase_order_item (
+CREATE TABLE IF NOT EXISTS purchases.purchase_order_item (
     id                SERIAL PRIMARY KEY,
     purchase_order_id INT NOT NULL,
     product_cen       VARCHAR(64) NOT NULL,

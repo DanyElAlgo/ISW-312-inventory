@@ -176,12 +176,19 @@ INSERT INTO sales.payment (order_id, payment_type_id, paid_at) VALUES
 -- Purchases Module
 -- =========================
 
+TRUNCATE TABLE
+    purchases.purchase_order_item,
+    purchases.purchase_order,
+    purchases.supplier,
+    purchases.purchase_status
+    RESTART IDENTITY CASCADE;
+
 INSERT INTO purchases.purchase_status (name, description) VALUES
     ('Pending',   'Order created, not yet confirmed'),
     ('Confirmed', 'Order confirmed and stock received'),
     ('Cancelled', 'Order cancelled before confirmation');
 
--- Suppliers for the demo company (Fresh Foods, BUS-000002 -> business_id = 2)
+-- Suppliers for the demo company (Fresh Foods, BUS-000002 -> business_id = 2).
 INSERT INTO purchases.supplier (business_id, name, cen, contact_email, contact_phone) VALUES
     (2, 'Distribuidora La Pradera', 'SUP-000001', 'ventas@lapradera.test',     '555-0101'),
     (2, 'Lácteos del Valle',        'SUP-000002', 'pedidos@lacteosvalle.test', '555-0102'),
