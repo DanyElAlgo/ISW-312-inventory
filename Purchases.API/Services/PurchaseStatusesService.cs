@@ -7,9 +7,9 @@ namespace Purchases.API.Services;
 // the request lifetime, so we do not hammer the status table on every call.
 public class PurchaseStatusesService
 {
-    public const int PendingExternal = 0;
-    public const int ConfirmedExternal = 1;
-    public const int CancelledExternal = 2;
+    public const int Pending = 1;
+    public const int Confirmed = 2;
+    public const int Cancelled = 3;
 
     private readonly IPurchaseStatusRepository _statuses;
 
@@ -23,30 +23,30 @@ public class PurchaseStatusesService
     }
 
     public async Task<int> GetPendingIdAsync()
-        => _pendingId ??= await ResolveAsync("pending", PendingExternal);
+        => _pendingId ??= await ResolveAsync("pending", Pending);
 
     public async Task<int> GetConfirmedIdAsync()
-        => _confirmedId ??= await ResolveAsync("confirmed", ConfirmedExternal);
+        => _confirmedId ??= await ResolveAsync("confirmed", Confirmed);
 
     public async Task<int> GetCancelledIdAsync()
-        => _cancelledId ??= await ResolveAsync("cancelled", CancelledExternal);
+        => _cancelledId ??= await ResolveAsync("cancelled", Cancelled);
 
     // The contract's integer PurchaseStatus is 0/1/2 (Pending/Confirmed/Cancelled).
     // The DB IDs may differ if the seed runs against a non-empty table, so we never
     // assume id == externalCode.
     public async Task<int> ToExternalAsync(int statusId)
     {
-        if (statusId == await GetPendingIdAsync()) return PendingExternal;
-        if (statusId == await GetConfirmedIdAsync()) return ConfirmedExternal;
-        if (statusId == await GetCancelledIdAsync()) return CancelledExternal;
+        if (statusId == await GetPendingIdAsync()) return Pending;
+        if (statusId == await GetConfirmedIdAsync()) return Confirmed;
+        if (statusId == await GetCancelledIdAsync()) return Cancelled;
         return -1;
     }
 
     public async Task<int?> FromExternalAsync(int external) => external switch
     {
-        PendingExternal => await GetPendingIdAsync(),
-        ConfirmedExternal => await GetConfirmedIdAsync(),
-        CancelledExternal => await GetCancelledIdAsync(),
+        Pending => await GetPendingIdAsync(),
+        Confirmed => await GetConfirmedIdAsync(),
+        Cancelled => await GetCancelledIdAsync(),
         _ => null,
     };
 

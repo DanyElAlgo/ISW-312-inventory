@@ -3,6 +3,7 @@ using Purchases.API.DTOs;
 using Purchases.API.HttpClients;
 using Purchases.API.Models;
 using Purchases.API.Repositories.Interfaces;
+using Purchases.Domain.Enums;
 
 namespace Purchases.API.Services;
 
@@ -39,7 +40,7 @@ public class PurchaseOrdersService
 
     public async Task<PagedResultDto<PurchaseOrderListDto>?> ListAsync(
         string companyCen,
-        int? externalStatus,
+        PurchaseStatusEnum? externalStatus,
         int page,
         int pageSize,
         bool sortDescending)
@@ -53,12 +54,9 @@ public class PurchaseOrdersService
 
         int? statusId = null;
         if (externalStatus.HasValue)
-        {
-            statusId = await _statuses.FromExternalAsync(externalStatus.Value);
-            if (statusId == null)
-                throw new InvalidOperationException(
-                    $"Unknown PurchaseStatus value '{externalStatus.Value}'. Allowed: 0=Pending, 1=Confirmed, 2=Cancelled.");
-        }
+            statusId = await _statuses.FromExternalAsync((int)externalStatus.Value)
+                ?? throw new InvalidOperationException(
+                    $"Unknown PurchaseStatus value '{externalStatus.Value}'. Allowed: Pending, Confirmed, Cancelled.");
 
         var (rows, totalCount) = await _orders.SearchAsync(business.Id, statusId, page, pageSize, sortDescending);
 
@@ -90,6 +88,7 @@ public class PurchaseOrdersService
 
     public async Task<PurchaseOrderSummaryDto?> CreateAsync(string companyCen, CreatePurchaseOrderDto request)
     {
+        // TODO: Resolver mejor el businessCen/businessId
         var business = await _businesses.GetByCenAsync(companyCen);
         if (business == null) return null;
 
@@ -144,7 +143,7 @@ public class PurchaseOrdersService
         return new PurchaseOrderSummaryDto
         {
             OrderCen = order.Cen!,
-            Status = PurchaseStatusesService.PendingExternal,
+            Status = PurchaseStatusEnum.Pending,
         };
     }
 
@@ -201,8 +200,8 @@ public class PurchaseOrdersService
         return new PurchaseOrderConfirmationDto
         {
             OrderCen = order.Cen!,
-            Status = PurchaseStatusesService.ConfirmedExternal,
-            ConfirmedAt = confirmedAt,
+            Status = PurchaseStatusEnum.Confirmed,
+            ConfirmedAt = DateTime.SpecifyKind(confirmedAt, DateTimeKind.Utc),
         };
     }
 
@@ -211,7 +210,7 @@ public class PurchaseOrdersService
         return new PurchaseOrderListDto
         {
             OrderCen = order.Cen ?? $"PO-{order.Id:D6}",
-            Status = await _statuses.ToExternalAsync(order.StatusId),
+            Status = (PurchaseStatusEnum)order.StatusId,
             CreatedAt = order.CreatedAt,
             ConfirmedAt = order.ConfirmedAt,
             SupplierCen = order.Supplier?.Cen ?? string.Empty,
@@ -224,7 +223,7 @@ public class PurchaseOrdersService
         return new PurchaseOrderDetailDto
         {
             OrderCen = order.Cen ?? $"PO-{order.Id:D6}",
-            Status = await _statuses.ToExternalAsync(order.StatusId),
+            Status = (PurchaseStatusEnum)order.StatusId,
             CreatedAt = order.CreatedAt,
             ConfirmedAt = order.ConfirmedAt,
             SupplierCen = order.Supplier?.Cen ?? string.Empty,

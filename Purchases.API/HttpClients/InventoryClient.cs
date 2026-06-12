@@ -44,7 +44,7 @@ public class InventoryClient
                     $"Inventory rejected stock increase ({(int)response.StatusCode}): {body}");
             }
 
-            return await response.Content.ReadFromJsonAsync<StockIncreaseResponse>();
+            return null;
         }
         catch (HttpRequestException)
         {

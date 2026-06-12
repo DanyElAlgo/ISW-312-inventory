@@ -31,8 +31,8 @@ public sealed class StockIncreaseItemDto
 
 public sealed class StockIncreaseResponse
 {
-    public required string DocumentCen { get; init; }
-    public required string DocumentType { get; init; }
+    public string? DocumentCen { get; init; }
+    public string? DocumentType { get; init; }
     public IReadOnlyList<string> GeneratedMovementCens { get; init; } = [];
 }
 

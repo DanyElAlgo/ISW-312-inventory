@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using Purchases.API.HttpClients;
 using Purchases.API.Models;
@@ -21,6 +22,13 @@ builder.Services.AddHttpClient<InventoryClient>(client =>
         ?? throw new InvalidOperationException("InventoryApi:BaseUrl is not configured.");
     client.BaseAddress = new Uri(baseUrl);
 });
+
+builder.Services
+    .AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
 
 builder.Services.Configure<InventoryIntegrationOptions>(
     builder.Configuration.GetSection("InventoryIntegration"));

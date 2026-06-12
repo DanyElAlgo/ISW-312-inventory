@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Purchases.Domain.Enums;
 
 namespace Purchases.API.DTOs;
 
@@ -29,13 +30,13 @@ public sealed class CreatePurchaseOrderItemDto
 public sealed class PurchaseOrderSummaryDto
 {
     public required string OrderCen { get; init; }
-    public int Status { get; init; }
+    public PurchaseStatusEnum Status { get; init; }
 }
 
 public sealed class PurchaseOrderListDto
 {
     public required string OrderCen { get; init; }
-    public int Status { get; init; }
+    public PurchaseStatusEnum Status { get; init; }
     public DateTime CreatedAt { get; init; }
     public DateTime? ConfirmedAt { get; init; }
     public required string SupplierCen { get; init; }
@@ -45,7 +46,7 @@ public sealed class PurchaseOrderListDto
 public sealed class PurchaseOrderDetailDto
 {
     public required string OrderCen { get; init; }
-    public int Status { get; init; }
+    public PurchaseStatusEnum Status { get; init; }
     public DateTime CreatedAt { get; init; }
     public DateTime? ConfirmedAt { get; init; }
     public required string SupplierCen { get; init; }
@@ -62,7 +63,7 @@ public sealed class PurchaseOrderDetailItemDto
 public sealed class PurchaseOrderConfirmationDto
 {
     public required string OrderCen { get; init; }
-    public int Status { get; init; }
+    public PurchaseStatusEnum Status { get; init; }
     public DateTime ConfirmedAt { get; init; }
 }
 

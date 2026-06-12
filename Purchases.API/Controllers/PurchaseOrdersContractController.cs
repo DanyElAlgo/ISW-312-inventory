@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Purchases.Domain.Enums;
 using Purchases.API.DTOs;
 using Purchases.API.Services;
 
@@ -22,7 +23,7 @@ public class PurchaseOrdersContractController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<IActionResult> ListOrders(
         string companyCen,
-        [FromQuery] int? status,
+        [FromQuery] PurchaseStatusEnum? status,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
         [FromQuery] bool sortDescending = true)
@@ -42,10 +43,10 @@ public class PurchaseOrdersContractController : ControllerBase
 
     /// <summary>Crea una orden de compra</summary>
     [HttpPost("api/purchases/companies/{companyCen}/orders")]
-    [ProducesResponseType(typeof(PurchaseOrderSummaryDto), 201)]
+    [ProducesResponseType(typeof(string), 201)]
     [ProducesResponseType(400)]
     [ProducesResponseType(404)]
-    public async Task<IActionResult> CreateOrder(
+    public async Task<ActionResult<PurchaseOrderSummaryDto>> CreateOrder(
         string companyCen,
         [FromBody] CreatePurchaseOrderDto request)
     {
