@@ -13,7 +13,6 @@ public partial class PurchasesDbContext : DbContext
     {
     }
 
-    public virtual DbSet<Business> Businesses { get; set; }
     public virtual DbSet<Supplier> Suppliers { get; set; }
     public virtual DbSet<PurchaseStatus> PurchaseStatuses { get; set; }
     public virtual DbSet<PurchaseOrder> PurchaseOrders { get; set; }
@@ -25,16 +24,6 @@ public partial class PurchasesDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         const string schema = "purchases";
-
-        modelBuilder.Entity<Business>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("business_pkey");
-            entity.ToTable("business", "inventory");
-            entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.Name).HasMaxLength(255).HasColumnName("name");
-            entity.Property(e => e.Cen).HasMaxLength(64).HasColumnName("cen");
-            entity.Property(e => e.IsActive).HasColumnName("is_active");
-        });
 
         modelBuilder.Entity<PurchaseStatus>(entity =>
         {
@@ -50,7 +39,7 @@ public partial class PurchasesDbContext : DbContext
             entity.HasKey(e => e.Id).HasName("supplier_pkey");
             entity.ToTable("supplier", schema);
             entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.BusinessId).HasColumnName("business_id");
+            entity.Property(e => e.CompanyCen).HasMaxLength(64).HasColumnName("company_cen");
             entity.Property(e => e.Name).HasMaxLength(255).HasColumnName("name");
             entity.Property(e => e.Cen).HasMaxLength(64).HasColumnName("cen");
             entity.Property(e => e.ContactEmail).HasMaxLength(255).HasColumnName("contact_email");
@@ -63,7 +52,7 @@ public partial class PurchasesDbContext : DbContext
             entity.HasKey(e => e.Id).HasName("purchase_order_pkey");
             entity.ToTable("purchase_order", schema);
             entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.BusinessId).HasColumnName("business_id");
+            entity.Property(e => e.CompanyCen).HasMaxLength(64).HasColumnName("company_cen");
             entity.Property(e => e.SupplierId).HasColumnName("supplier_id");
             entity.Property(e => e.WarehouseCen).HasMaxLength(64).HasColumnName("warehouse_cen");
             entity.Property(e => e.StatusId).HasColumnName("status_id");

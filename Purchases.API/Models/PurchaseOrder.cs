@@ -4,7 +4,7 @@ public partial class PurchaseOrder
 {
     public int Id { get; set; }
 
-    public int BusinessId { get; set; }
+    public string CompanyCen { get; set; } = string.Empty;
 
     public int SupplierId { get; set; }
 

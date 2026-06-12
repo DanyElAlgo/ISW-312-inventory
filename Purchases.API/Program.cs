@@ -49,7 +49,6 @@ builder.Services.Configure<InventoryIntegrationOptions>(
     builder.Configuration.GetSection("InventoryIntegration"));
 
 // Repositories
-builder.Services.AddScoped<IBusinessRepository, BusinessRepository>();
 builder.Services.AddScoped<ISupplierRepository, SupplierRepository>();
 builder.Services.AddScoped<IPurchaseStatusRepository, PurchaseStatusRepository>();
 builder.Services.AddScoped<IPurchaseOrderRepository, PurchaseOrderRepository>();

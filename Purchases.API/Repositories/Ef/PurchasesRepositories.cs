@@ -5,23 +5,6 @@ using Purchases.API.Repositories.Interfaces;
 
 namespace Purchases.API.Repositories.Ef;
 
-public sealed class BusinessRepository : IBusinessRepository
-{
-    private readonly PurchasesDbContext _context;
-
-    public BusinessRepository(PurchasesDbContext context)
-    {
-        _context = context;
-    }
-
-    public async Task<Business?> GetByCenAsync(string companyCen)
-    {
-        return await _context.Businesses
-            .AsNoTracking()
-            .FirstOrDefaultAsync(b => b.Cen == companyCen);
-    }
-}
-
 public sealed class SupplierRepository : ISupplierRepository
 {
     private readonly PurchasesDbContext _context;
@@ -31,18 +14,18 @@ public sealed class SupplierRepository : ISupplierRepository
         _context = context;
     }
 
-    public async Task<IReadOnlyList<Supplier>> GetActiveByBusinessIdAsync(int businessId)
+    public async Task<IReadOnlyList<Supplier>> GetActiveByCompanyCenAsync(string companyCen)
     {
         return await _context.Suppliers
-            .Where(s => s.BusinessId == businessId && s.IsActive)
+            .Where(s => s.CompanyCen == companyCen && s.IsActive)
             .OrderBy(s => s.Name)
             .ToListAsync();
     }
 
-    public async Task<Supplier?> GetByCenAsync(int businessId, string supplierCen)
+    public async Task<Supplier?> GetByCenAsync(string companyCen, string supplierCen)
     {
         return await _context.Suppliers
-            .FirstOrDefaultAsync(s => s.BusinessId == businessId && s.Cen == supplierCen);
+            .FirstOrDefaultAsync(s => s.CompanyCen == companyCen && s.Cen == supplierCen);
     }
 }
 
@@ -79,16 +62,16 @@ public sealed class PurchaseOrderRepository : IPurchaseOrderRepository
         _context = context;
     }
 
-    public async Task<PurchaseOrder?> GetByCenAsync(int businessId, string orderCen, bool includeItems = false)
+    public async Task<PurchaseOrder?> GetByCenAsync(string companyCen, string orderCen, bool includeItems = false)
     {
         IQueryable<PurchaseOrder> query = _context.PurchaseOrders.Include(o => o.Supplier);
         if (includeItems)
             query = query.Include(o => o.Items);
-        return await query.FirstOrDefaultAsync(o => o.BusinessId == businessId && o.Cen == orderCen);
+        return await query.FirstOrDefaultAsync(o => o.CompanyCen == companyCen && o.Cen == orderCen);
     }
 
     public async Task<(IReadOnlyList<PurchaseOrder> Items, int TotalCount)> SearchAsync(
-        int businessId,
+        string companyCen,
         int? statusId,
         int page,
         int pageSize,
@@ -97,7 +80,7 @@ public sealed class PurchaseOrderRepository : IPurchaseOrderRepository
         IQueryable<PurchaseOrder> query = _context.PurchaseOrders
             .Include(o => o.Supplier)
             .Include(o => o.Items)
-            .Where(o => o.BusinessId == businessId);
+            .Where(o => o.CompanyCen == companyCen);
 
         if (statusId.HasValue)
             query = query.Where(o => o.StatusId == statusId.Value);

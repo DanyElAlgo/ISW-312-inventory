@@ -2,15 +2,10 @@ using Purchases.API.Models;
 
 namespace Purchases.API.Repositories.Interfaces;
 
-public interface IBusinessRepository
-{
-    Task<Business?> GetByCenAsync(string companyCen);
-}
-
 public interface ISupplierRepository
 {
-    Task<IReadOnlyList<Supplier>> GetActiveByBusinessIdAsync(int businessId);
-    Task<Supplier?> GetByCenAsync(int businessId, string supplierCen);
+    Task<IReadOnlyList<Supplier>> GetActiveByCompanyCenAsync(string companyCen);
+    Task<Supplier?> GetByCenAsync(string companyCen, string supplierCen);
 }
 
 public interface IPurchaseStatusRepository
@@ -21,9 +16,9 @@ public interface IPurchaseStatusRepository
 
 public interface IPurchaseOrderRepository
 {
-    Task<PurchaseOrder?> GetByCenAsync(int businessId, string orderCen, bool includeItems = false);
+    Task<PurchaseOrder?> GetByCenAsync(string companyCen, string orderCen, bool includeItems = false);
     Task<(IReadOnlyList<PurchaseOrder> Items, int TotalCount)> SearchAsync(
-        int businessId,
+        string companyCen,
         int? statusId,
         int page,
         int pageSize,

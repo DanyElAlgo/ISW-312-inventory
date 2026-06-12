@@ -6,23 +6,16 @@ namespace Purchases.API.Services;
 
 public class SuppliersService
 {
-    private readonly IBusinessRepository _businesses;
     private readonly ISupplierRepository _suppliers;
 
-    public SuppliersService(
-        IBusinessRepository businesses,
-        ISupplierRepository suppliers)
+    public SuppliersService(ISupplierRepository suppliers)
     {
-        _businesses = businesses;
         _suppliers = suppliers;
     }
 
-    public async Task<IReadOnlyList<SupplierDto>?> ListAsync(string companyCen)
+    public async Task<IReadOnlyList<SupplierDto>> ListAsync(string companyCen)
     {
-        var business = await _businesses.GetByCenAsync(companyCen);
-        if (business == null) return null;
-
-        var rows = await _suppliers.GetActiveByBusinessIdAsync(business.Id);
+        var rows = await _suppliers.GetActiveByCompanyCenAsync(companyCen);
         return rows.Select(MapSummary).ToList();
     }
 
