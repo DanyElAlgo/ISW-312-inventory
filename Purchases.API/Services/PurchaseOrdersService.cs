@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Options;
 using Purchases.API.DTOs;
+using Purchases.API.Exceptions;
 using Purchases.API.HttpClients;
 using Purchases.API.Models;
 using Purchases.API.Repositories.Interfaces;
@@ -127,7 +128,9 @@ public class PurchaseOrdersService
                 var product = await _inventory.GetProductAsync(companyCen, line.ProductCen);
                 productName = product?.Name;
             }
-            catch (InvalidOperationException) { /* ignore — name snapshot is non-critical */ }
+            // Name snapshot is non-critical: a rejected lookup or a momentarily-down Inventory
+            // must not block order creation.
+            catch (Exception ex) when (ex is InvalidOperationException or InventoryUnavailableException) { }
 
             _items.Add(new PurchaseOrderItem
             {

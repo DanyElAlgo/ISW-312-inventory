@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Purchases.Domain.Enums;
 using Purchases.API.DTOs;
+using Purchases.API.Exceptions;
 using Purchases.API.Services;
 
 namespace Purchases.API.Controllers;
@@ -28,17 +29,10 @@ public class PurchaseOrdersContractController : ControllerBase
         [FromQuery] int pageSize = 20,
         [FromQuery] bool sortDescending = true)
     {
-        try
-        {
-            var result = await _orders.ListAsync(companyCen, status, page, pageSize, sortDescending);
-            if (result == null)
-                return NotFound(new { message = "Company not found." });
-            return Ok(result);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        var result = await _orders.ListAsync(companyCen, status, page, pageSize, sortDescending);
+        if (result == null)
+            throw new NotFoundException("Company not found.");
+        return Ok(result);
     }
 
     /// <summary>Crea una orden de compra</summary>
@@ -51,27 +45,20 @@ public class PurchaseOrdersContractController : ControllerBase
         [FromBody] CreatePurchaseOrderDto request)
     {
         if (request == null)
-            return BadRequest(new { message = "Request body is required." });
+            throw new InvalidOperationException("Request body is required.");
         if (string.IsNullOrWhiteSpace(request.SupplierCen))
-            return BadRequest(new { message = "supplierCen is required." });
+            throw new InvalidOperationException("supplierCen is required.");
         if (string.IsNullOrWhiteSpace(request.WarehouseCen))
-            return BadRequest(new { message = "warehouseCen is required." });
+            throw new InvalidOperationException("warehouseCen is required.");
 
-        try
-        {
-            var result = await _orders.CreateAsync(companyCen, request);
-            if (result == null)
-                return NotFound(new { message = "Company not found." });
+        var result = await _orders.CreateAsync(companyCen, request);
+        if (result == null)
+            throw new NotFoundException("Company not found.");
 
-            return CreatedAtAction(
-                nameof(GetOrder),
-                new { companyCen, orderCen = result.OrderCen },
-                result);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        return CreatedAtAction(
+            nameof(GetOrder),
+            new { companyCen, orderCen = result.OrderCen },
+            result);
     }
 
     /// <summary>Obtiene el detalle de una orden de compra</summary>
@@ -82,33 +69,21 @@ public class PurchaseOrdersContractController : ControllerBase
     {
         var result = await _orders.GetAsync(companyCen, orderCen);
         if (result == null)
-            return NotFound(new { message = "Purchase order not found." });
+            throw new NotFoundException("Purchase order not found.");
         return Ok(result);
     }
 
     /// <summary>Confirma una orden de compra</summary>
     [HttpPost("api/purchases/companies/{companyCen}/orders/{orderCen}/confirm")]
     [ProducesResponseType(typeof(PurchaseOrderConfirmationDto), 200)]
+    [ProducesResponseType(400)]
     [ProducesResponseType(404)]
-    [ProducesResponseType(409)]
+    [ProducesResponseType(503)]
     public async Task<IActionResult> ConfirmOrder(string companyCen, string orderCen)
     {
-        try
-        {
-            var result = await _orders.ConfirmAsync(companyCen, orderCen);
-            if (result == null)
-                return NotFound(new { message = "Purchase order not found." });
-            return Ok(result);
-        }
-        catch (InvalidOperationException ex) when (
-            ex.Message.Contains("Only orders in Pending", StringComparison.OrdinalIgnoreCase) ||
-            ex.Message.Contains("no items", StringComparison.OrdinalIgnoreCase))
-        {
-            return Conflict(new { message = ex.Message });
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        var result = await _orders.ConfirmAsync(companyCen, orderCen);
+        if (result == null)
+            throw new NotFoundException("Purchase order not found.");
+        return Ok(result);
     }
 }

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Purchases.API.DTOs;
+using Purchases.API.Exceptions;
 using Purchases.API.Services;
 
 namespace Purchases.API.Controllers;
@@ -23,7 +24,7 @@ public class SuppliersContractController : ControllerBase
     {
         var result = await _suppliers.ListAsync(companyCen);
         if (result == null)
-            return NotFound(new { message = "Company not found." });
+            throw new NotFoundException("Company not found.");
         return Ok(result);
     }
 }
