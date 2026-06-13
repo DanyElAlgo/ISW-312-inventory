@@ -31,7 +31,7 @@ public class InventoryClient
             $"api/inventory/companies/{companyCen}/stock/increase", dto);
 
         await EnsureSuccessAsync(response, "increase stock");
-        return await response.Content.ReadFromJsonAsync<StockIncreaseResponse>();
+        return null;
     }
 
     private static async Task EnsureSuccessAsync(HttpResponseMessage response, string action)
