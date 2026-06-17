@@ -1255,6 +1255,28 @@
         }
       }
     },
+    "/api/inventory/companies/{companyCen}/restock-events": {
+      "get": {
+        "tags": [
+          "Stock"
+        ],
+        "parameters": [
+          {
+            "name": "companyCen",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/inventory/companies/{companyCen}/units": {
       "get": {
         "tags": [

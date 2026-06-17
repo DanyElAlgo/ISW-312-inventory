@@ -305,22 +305,20 @@ CREATE TABLE IF NOT EXISTS purchases.purchase_status (
 
 CREATE TABLE IF NOT EXISTS purchases.supplier (
     id            SERIAL PRIMARY KEY,
-    business_id   INT NOT NULL,
+    company_cen   VARCHAR(64) NOT NULL,
     name          VARCHAR(255) NOT NULL,
     cen           VARCHAR(64),
     contact_email VARCHAR(255),
     contact_phone VARCHAR(50),
-    is_active     BOOLEAN NOT NULL DEFAULT TRUE,
-    CONSTRAINT supplier_business_id_fkey
-        FOREIGN KEY (business_id) REFERENCES inventory.business (id)
+    is_active     BOOLEAN NOT NULL DEFAULT TRUE
 );
 
-CREATE UNIQUE INDEX IF NOT EXISTS ux_supplier_business_cen
-    ON purchases.supplier (business_id, cen);
+CREATE UNIQUE INDEX IF NOT EXISTS ux_supplier_company_cen
+    ON purchases.supplier (company_cen, cen);
 
 CREATE TABLE IF NOT EXISTS purchases.purchase_order (
     id                     SERIAL PRIMARY KEY,
-    business_id            INT NOT NULL,
+    company_cen            VARCHAR(64) NOT NULL,
     supplier_id            INT NOT NULL,
     warehouse_cen          VARCHAR(64) NOT NULL,
     status_id              INT NOT NULL,
@@ -330,16 +328,14 @@ CREATE TABLE IF NOT EXISTS purchases.purchase_order (
     cancelled_at           TIMESTAMP,
     cancellation_reason    VARCHAR(500),
     inventory_document_cen VARCHAR(64),
-    CONSTRAINT purchase_order_business_id_fkey
-        FOREIGN KEY (business_id) REFERENCES inventory.business (id),
     CONSTRAINT purchase_order_supplier_id_fkey
         FOREIGN KEY (supplier_id) REFERENCES purchases.supplier (id),
     CONSTRAINT purchase_order_status_id_fkey
         FOREIGN KEY (status_id) REFERENCES purchases.purchase_status (id)
 );
 
-CREATE UNIQUE INDEX IF NOT EXISTS ux_purchase_order_business_cen
-    ON purchases.purchase_order (business_id, cen);
+CREATE UNIQUE INDEX IF NOT EXISTS ux_purchase_order_company_cen
+    ON purchases.purchase_order (company_cen, cen);
 
 CREATE TABLE IF NOT EXISTS purchases.purchase_order_item (
     id                SERIAL PRIMARY KEY,

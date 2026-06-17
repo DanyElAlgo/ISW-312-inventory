@@ -1,5 +1,9 @@
 using System.Globalization;
 using Microsoft.EntityFrameworkCore;
+using Polly;
+using Polly.Extensions.Http;
+using Sales.API;
+using Sales.API.Http;
 using Sales.API.HttpClients;
 using Sales.API.Models;
 using Sales.API.Repositories.Ef;
@@ -15,12 +19,17 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<SalesDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+builder.Services.AddTransient<InventoryFailureTranslatingHandler>();
 builder.Services.AddHttpClient<InventoryClient>(client =>
-{
-    var baseUrl = builder.Configuration["InventoryApi:BaseUrl"]
-        ?? throw new InvalidOperationException("InventoryApi:BaseUrl is not configured.");
-    client.BaseAddress = new Uri(baseUrl);
-});
+    {
+        var baseUrl = builder.Configuration["InventoryApi:BaseUrl"]
+            ?? throw new InvalidOperationException("InventoryApi:BaseUrl is not configured.");
+        client.BaseAddress = new Uri(baseUrl);
+        client.Timeout = TimeSpan.FromSeconds(10);
+    })
+    .AddHttpMessageHandler<InventoryFailureTranslatingHandler>()
+    .AddPolicyHandler(HttpPolicyExtensions.HandleTransientHttpError()
+        .CircuitBreakerAsync(5, TimeSpan.FromSeconds(30)));
 
 builder.Services.Configure<InventoryIntegrationOptions>(
     builder.Configuration.GetSection("InventoryIntegration"));
@@ -57,6 +66,9 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
@@ -68,6 +80,8 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+app.UseExceptionHandler();
 
 var enableSwagger = builder.Configuration.GetValue<bool>("Swagger:Enabled", app.Environment.IsDevelopment());
 if (enableSwagger)

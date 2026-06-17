@@ -7,6 +7,10 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/main/Dotnet.gitignore
 
+# Environment files (school rule: real .env is secret, template is committed)
+**/.env
+!**/.env.example
+
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/

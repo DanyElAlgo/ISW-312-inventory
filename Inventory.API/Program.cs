@@ -16,7 +16,6 @@ builder.Services.AddScoped<IWarehouseRepository, WarehouseRepository>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<IWarehouseProductRepository, WarehouseProductRepository>();
 
-// Register all domain-specific services
 builder.Services.AddScoped<CompaniesService>();
 builder.Services.AddScoped<CategoriesService>();
 builder.Services.AddScoped<UnitsService>();
@@ -27,6 +26,8 @@ builder.Services.AddScoped<DocumentsService>();
 builder.Services.AddScoped<KardexService>();
 builder.Services.AddScoped<StockValidationService>();
 builder.Services.AddScoped<StockConsumeService>();
+
+builder.Services.AddSingleton<RestockNotifier>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();

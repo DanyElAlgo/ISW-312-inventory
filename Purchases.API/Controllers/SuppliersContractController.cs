@@ -18,12 +18,9 @@ public class SuppliersContractController : ControllerBase
     /// <summary>Lista proveedores activos de una empresa</summary>
     [HttpGet("api/purchases/companies/{companyCen}/suppliers")]
     [ProducesResponseType(typeof(List<SupplierDto>), 200)]
-    [ProducesResponseType(404)]
     public async Task<IActionResult> ListSuppliers(string companyCen)
     {
         var result = await _suppliers.ListAsync(companyCen);
-        if (result == null)
-            return NotFound(new { message = "Company not found." });
         return Ok(result);
     }
 }
