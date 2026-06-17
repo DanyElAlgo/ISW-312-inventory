@@ -5,7 +5,8 @@
 INSERT INTO inventory.business (name, cen) VALUES
     ('TechCorp Solutions', 'BUS-000001'),
     ('Fresh Foods Market', 'BUS-000002'),
-    ('Electronics Plus',   'BUS-000003');
+    ('Electronics Plus',   'BUS-000003'),
+    ('Production Test', '11111111-1111-1111-1111-111111111111');
 
 INSERT INTO inventory.category (name, description, business_id, cen) VALUES
     ('Electronics',     'Electronic devices and components',  1, 'CAT-000001'),
@@ -47,12 +48,23 @@ INSERT INTO inventory.product (sku, name, description, business_id, category_id,
     ('KBD-001', 'Mechanical Keyboard', 'RGB Mechanical Keyboard',     3, 6, 1,  35.00,  65.00, 25, 'PRD-000009', true, 1, NULL),
     ('MON-001', '27" Monitor',         'Full HD 27 inch monitor',     3, 6, 1, 150.00, 250.00,  8, 'PRD-000010', true, 1, NULL);
 
+-- Prod Test
+INSERT INTO inventory.product (sku, name, description, business_id, category_id, unit_id, cost_price, price, reorder_level, cen, is_active, unit_qty, station_code) VALUES
+    ('APP-001', 'Organic Apples',     'Fresh organic red apples',          4, 2, 2, 2.50, 4.50, 100, 'PRD-000004', true, 1, 'Cocina'),
+    ('MLK-001', 'Whole Milk',         '1 liter container of whole milk',   4, 3, 3, 1.50, 2.20,  50, 'PRD-000005', true, 1, 'Bar'),
+    ('CHE-001', 'Cheddar Cheese',     'Aged cheddar cheese block',         4, 3, 2, 4.50, 7.80,  20, 'PRD-000006', true, 1, 'Cocina'),
+    ('OJC-001', 'Orange Juice',       'Fresh squeezed orange juice',       4, 4, 3, 2.00, 3.40,  30, 'PRD-000007', true, 1, 'Bar'),
+    ('BRD-001', 'Whole Wheat Bread',  'Artisan whole wheat bread loaf',    4, 5, 1, 1.50, 2.90,  40, 'PRD-000008', true, 1, 'Cocina');
+
+
 INSERT INTO inventory.warehouse (business_id, name, cen) VALUES
     (1, 'Main Tech Warehouse',         'WAR-000001'),
     (1, 'Tech Distribution Center',    'WAR-000002'),
     (2, 'Fresh Market Warehouse A',    'WAR-000003'),
     (2, 'Fresh Market Cold Storage',   'WAR-000004'),
-    (3, 'Electronics Plus Storage',    'WAR-000005');
+    (3, 'Electronics Plus Storage',    'WAR-000005'),
+    (4, 'Prod Waretest 1',             'WAR-000006'),
+    (4, 'Prod Waretest 1',             'WAR-000007');
 
 INSERT INTO inventory.warehouse_product (warehouse_id, product_id, status_id, stock_left, low_stock_qty, price) VALUES
     (1, 1, 1,  45, 10, 800.00),
@@ -67,7 +79,13 @@ INSERT INTO inventory.warehouse_product (warehouse_id, product_id, status_id, st
     (4, 7, 1, 100, 25,   2.00),
     (4, 8, 1,  75, 20,   1.50),
     (5, 9, 1,  40, 15,  35.00),
-    (5,10, 1,  20,  8, 150.00);
+    (5,10, 1,  20,  8, 150.00),
+    (6, 5, 1,  80, 20,   1.50),
+    (6, 6, 1,  60, 15,   4.50),
+    (6, 7, 1, 100, 25,   2.00),
+    (6, 8, 1,  75, 20,   1.50),
+    (6, 9, 1,  40, 15,  35.00),
+    (7,10, 1,  20,  8, 150.00);
 
 INSERT INTO inventory.inventory_document (business_id, warehouse_id, document_type, document_cen, created_at, status) VALUES
     (1, 1, 'ENTRY', 'DOC-000001', '2025-02-01 08:00:00', 'REGISTERED'),
@@ -144,7 +162,8 @@ INSERT INTO sales.station_coverage (station_type_id, category_id) VALUES
 INSERT INTO sales.default_warehouse (company_cen, warehouse_cen) VALUES
     ('BUS-000001', 'WAR-000001'),
     ('BUS-000002', 'WAR-000003'),
-    ('BUS-000003', 'WAR-000005');
+    ('BUS-000003', 'WAR-000005'),
+    ('11111111-1111-1111-1111-111111111111', 'WAR-000006');
 
 -- Sample tickets belong to Fresh Foods Market (BUS-000002) / Fresh Market Warehouse A (WAR-000003).
 INSERT INTO sales.order_ticket (company_cen, warehouse_cen, customer_id, status_id, tax_rate_snapshot, created_at, daily_number) VALUES
@@ -192,7 +211,10 @@ INSERT INTO purchases.purchase_status (name, description) VALUES
 INSERT INTO purchases.supplier (company_cen, name, cen, contact_email, contact_phone) VALUES
     ('BUS-000002', 'Distribuidora La Pradera', 'SUP-000001', 'ventas@lapradera.test',     '555-0101'),
     ('BUS-000002', 'Lácteos del Valle',        'SUP-000002', 'pedidos@lacteosvalle.test', '555-0102'),
-    ('BUS-000002', 'Panadería Don Juan',       'SUP-000003', 'contacto@donjuan.test',     '555-0103');
+    ('BUS-000002', 'Panadería Don Juan',       'SUP-000003', 'contacto@donjuan.test',     '555-0103'),
+    ('11111111-1111-1111-1111-111111111111', 'Coca-Cola', 'SUP-000004', 'coca@cola.test',     '555-0104'),
+    ('11111111-1111-1111-1111-111111111111', 'Lácteos LA PURITA',        'SUP-000005', 'lapurita@sa.test', '555-0105'),
+    ('11111111-1111-1111-1111-111111111111', 'Panadería Don',       'SUP-000006', 'contacto@don.test',     '555-0106');
 
 -- A demo Pending purchase order so the UI shows something on first load.
 INSERT INTO purchases.purchase_order (company_cen, supplier_id, warehouse_cen, status_id, cen, created_at) VALUES

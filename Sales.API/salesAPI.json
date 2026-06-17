@@ -335,6 +335,161 @@
         }
       }
     },
+    "/api/sales/companies/{companyCen}/default-warehouse": {
+      "get": {
+        "tags": [
+          "DefaultWarehouseContract"
+        ],
+        "parameters": [
+          {
+            "name": "companyCen",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultWarehouseContractResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultWarehouseContractResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultWarehouseContractResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "DefaultWarehouseContract"
+        ],
+        "parameters": [
+          {
+            "name": "companyCen",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetDefaultWarehouseContractRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetDefaultWarehouseContractRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetDefaultWarehouseContractRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultWarehouseContractResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultWarehouseContractResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultWarehouseContractResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/sales/companies/{companyCen}/kds/teams": {
       "get": {
         "tags": [
@@ -1004,6 +1159,26 @@
               "text/json": {
                 "schema": {
                   "$ref": "#/components/schemas/TicketContractResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -1914,6 +2089,10 @@
           "waiterCen": {
             "type": "string",
             "nullable": true
+          },
+          "warehouseCen": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -1950,6 +2129,20 @@
           "averageTicket": {
             "type": "number",
             "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DefaultWarehouseContractResponse": {
+        "type": "object",
+        "properties": {
+          "companyCen": {
+            "type": "string",
+            "nullable": true
+          },
+          "warehouseCen": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -2205,6 +2398,16 @@
         },
         "additionalProperties": false
       },
+      "SetDefaultWarehouseContractRequest": {
+        "type": "object",
+        "properties": {
+          "warehouseCen": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "StockInsufficiencyResponseDto": {
         "type": "object",
         "properties": {
@@ -2277,6 +2480,10 @@
             "nullable": true
           },
           "companyCen": {
+            "type": "string",
+            "nullable": true
+          },
+          "warehouseCen": {
             "type": "string",
             "nullable": true
           },
@@ -2438,6 +2645,9 @@
     },
     {
       "name": "DashboardContract"
+    },
+    {
+      "name": "DefaultWarehouseContract"
     },
     {
       "name": "KdsContract"

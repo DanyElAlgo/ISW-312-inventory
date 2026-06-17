@@ -23,8 +23,7 @@
             "name": "status",
             "in": "query",
             "schema": {
-              "type": "integer",
-              "format": "int32"
+              "$ref": "#/components/schemas/PurchaseStatusEnum"
             }
           },
           {
@@ -156,17 +155,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/PurchaseOrderSummaryDto"
+                  "type": "string"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PurchaseOrderSummaryDto"
+                  "type": "string"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PurchaseOrderSummaryDto"
+                  "type": "string"
                 }
               }
             }
@@ -325,6 +324,26 @@
               }
             }
           },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
           "404": {
             "description": "Not Found",
             "content": {
@@ -345,25 +364,8 @@
               }
             }
           },
-          "409": {
-            "description": "Conflict",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
+          "503": {
+            "description": "Service Unavailable"
           }
         }
       }
@@ -409,26 +411,6 @@
                   "items": {
                     "$ref": "#/components/schemas/SupplierDto"
                   }
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -519,8 +501,7 @@
             "nullable": true
           },
           "status": {
-            "type": "integer",
-            "format": "int32"
+            "$ref": "#/components/schemas/PurchaseStatusEnum"
           },
           "confirmedAt": {
             "type": "string",
@@ -543,8 +524,7 @@
             "nullable": true
           },
           "status": {
-            "type": "integer",
-            "format": "int32"
+            "$ref": "#/components/schemas/PurchaseStatusEnum"
           },
           "createdAt": {
             "type": "string",
@@ -602,8 +582,7 @@
             "nullable": true
           },
           "status": {
-            "type": "integer",
-            "format": "int32"
+            "$ref": "#/components/schemas/PurchaseStatusEnum"
           },
           "createdAt": {
             "type": "string",
@@ -653,22 +632,13 @@
         },
         "additionalProperties": false
       },
-      "PurchaseOrderSummaryDto": {
-        "required": [
-          "orderCen"
+      "PurchaseStatusEnum": {
+        "enum": [
+          "Pending",
+          "Confirmed",
+          "Cancelled"
         ],
-        "type": "object",
-        "properties": {
-          "orderCen": {
-            "type": "string",
-            "nullable": true
-          },
-          "status": {
-            "type": "integer",
-            "format": "int32"
-          }
-        },
-        "additionalProperties": false
+        "type": "string"
       },
       "SupplierDto": {
         "required": [
