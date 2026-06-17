@@ -8,6 +8,8 @@ namespace Inventory.API.Services;
 
 public class StockService : InventoryServiceBase
 {
+    private readonly RestockNotifier _restockNotifier;
+
     public StockService(
         InventoryDbContext context,
         IBusinessRepository businessRepository,
@@ -15,9 +17,11 @@ public class StockService : InventoryServiceBase
         IUnitRepository unitRepository,
         IWarehouseRepository warehouseRepository,
         IProductRepository productRepository,
-        IWarehouseProductRepository warehouseProductRepository)
+        IWarehouseProductRepository warehouseProductRepository,
+        RestockNotifier restockNotifier)
         : base(context, businessRepository, categoryRepository, unitRepository, warehouseRepository, productRepository, warehouseProductRepository)
     {
+        _restockNotifier = restockNotifier;
     }
 
     public async Task<IReadOnlyList<StockItemDto>?> GetStockAsync(
@@ -104,6 +108,7 @@ public class StockService : InventoryServiceBase
             return null;
 
         var movements = new List<string>();
+        var restockEvents = new List<RestockEvent>();
         foreach (var item in dto.Items)
         {
             if (item.Quantity <= 0)
@@ -122,9 +127,21 @@ public class StockService : InventoryServiceBase
                 document.Id);
 
             movements.Add(movement.MovementCen);
+            restockEvents.Add(new RestockEvent
+            {
+                CompanyCen = companyCen,
+                ProductCen = product.Cen ?? item.ProductCen,
+                ProductName = product.Name ?? string.Empty,
+                Quantity = item.Quantity,
+                WarehouseCen = dto.WarehouseCen,
+                OccurredAt = DateTime.UtcNow,
+            });
         }
 
         await transaction.CommitAsync();
+
+        foreach (var evt in restockEvents)
+            _restockNotifier.Publish(evt);
 
         return new StockIncreaseResponse
         {
