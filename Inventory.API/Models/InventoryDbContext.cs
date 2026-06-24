@@ -25,7 +25,12 @@ public partial class InventoryDbContext : DbContext
     public virtual DbSet<WarehouseProduct> WarehouseProducts { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        => optionsBuilder.UseNpgsql("Name=ConnectionStrings:DefaultConnection");
+    {
+        // Only fall back to Npgsql when the context was not already configured by the
+        // caller (e.g. AddDbContext in Program.cs, or the InMemory provider in tests).
+        if (!optionsBuilder.IsConfigured)
+            optionsBuilder.UseNpgsql("Name=ConnectionStrings:DefaultConnection");
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
