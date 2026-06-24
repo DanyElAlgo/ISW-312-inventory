@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Options;
 using Purchases.API.DTOs;
+using Purchases.API.Events;
 using Purchases.API.Exceptions;
 using Purchases.API.HttpClients;
 using Purchases.API.Models;
@@ -17,6 +18,7 @@ public class PurchaseOrdersService
     private readonly InventoryClient _inventory;
     private readonly InventoryIntegrationOptions _integration;
     private readonly IPurchasesUnitOfWork _uow;
+    private readonly IEventPublisher _events;
 
     public PurchaseOrdersService(
         ISupplierRepository suppliers,
@@ -25,7 +27,8 @@ public class PurchaseOrdersService
         PurchaseStatusesService statuses,
         InventoryClient inventory,
         IOptions<InventoryIntegrationOptions> integrationOptions,
-        IPurchasesUnitOfWork uow)
+        IPurchasesUnitOfWork uow,
+        IEventPublisher events)
     {
         _suppliers = suppliers;
         _orders = orders;
@@ -34,6 +37,7 @@ public class PurchaseOrdersService
         _inventory = inventory;
         _integration = integrationOptions.Value;
         _uow = uow;
+        _events = events;
     }
 
     public async Task<PagedResultDto<PurchaseOrderListDto>?> ListAsync(
@@ -177,6 +181,23 @@ public class PurchaseOrdersService
         }
 
         await tx.CommitAsync();
+
+        await _events.PublishPurchaseOrderConfirmedAsync(new PurchaseOrderConfirmedEvent
+        {
+            CompanyCen = companyCen,
+            OrderCen = order.Cen!,
+            SupplierCen = order.Supplier?.Cen,
+            WarehouseCen = order.WarehouseCen,
+            ConfirmedAt = DateTime.SpecifyKind(confirmedAt, DateTimeKind.Utc),
+            Items = order.Items
+                .Select(i => new PurchaseOrderConfirmedItem
+                {
+                    ProductCen = i.ProductCen,
+                    ProductName = i.ProductName,
+                    Quantity = i.Quantity,
+                })
+                .ToList(),
+        });
 
         return new PurchaseOrderConfirmationDto
         {

@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Polly;
 using Polly.Extensions.Http;
 using Purchases.API;
+using Purchases.API.Events;
 using Purchases.API.Http;
 using Purchases.API.HttpClients;
 using Purchases.API.Models;
@@ -19,7 +20,6 @@ CultureInfo.DefaultThreadCurrentUICulture = culture;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Inventory base URL — shared .env name first, with fallbacks so nothing breaks.
 var inventoryUrl = builder.Configuration["INVENTORY_URL"]
     ?? builder.Configuration["Modules:InventoryBaseUrl"]
     ?? builder.Configuration["InventoryApi:BaseUrl"]
@@ -54,6 +54,17 @@ builder.Services.AddScoped<IPurchaseStatusRepository, PurchaseStatusRepository>(
 builder.Services.AddScoped<IPurchaseOrderRepository, PurchaseOrderRepository>();
 builder.Services.AddScoped<IPurchaseOrderItemRepository, PurchaseOrderItemRepository>();
 builder.Services.AddScoped<IPurchasesUnitOfWork, PurchasesUnitOfWork>();
+
+var eventBusName = builder.Configuration["EVENT_BUS_NAME"];
+if (!string.IsNullOrWhiteSpace(eventBusName))
+{
+    builder.Services.AddSingleton<IEventPublisher>(sp =>
+        new EventBridgePublisher(eventBusName, sp.GetRequiredService<ILogger<EventBridgePublisher>>()));
+}
+else
+{
+    builder.Services.AddSingleton<IEventPublisher, NoOpEventPublisher>();
+}
 
 // Per-entity services
 builder.Services.AddScoped<PurchaseStatusesService>();
