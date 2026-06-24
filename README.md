@@ -113,7 +113,7 @@ curl -X POST http://localhost:5002/api/sales/companies/{companyCen}/tickets/{tic
 | Variable | Effect |
 |---|---|
 | `ASPNETCORE_URLS` | Listen URL(s), e.g. `http://*:5001`. Wins over `appsettings.json`. |
-| `ConnectionStrings__DefaultConnection` | Postgres connection string. Default: `Host=localhost;Port=5432;Database=inventory_db;Username=postgres;Password=admin`. |
+| `ConnectionStrings__DefaultConnection` | Postgres connection string, e.g. `Host=localhost;Port=5432;Database=inventory_db;Username=postgres;Password=<your-local-password>`. For local dev set it in the gitignored `appsettings.Development.json` or `.env`; in the cloud it is injected from AWS Secrets Manager. |
 | `InventoryApi__BaseUrl` *(Sales & Purchases only)* | Where the caller reaches Inventory, e.g. `http://localhost:5001`. |
 
 ### Frontend

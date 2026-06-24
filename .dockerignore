@@ -1,0 +1,20 @@
+# Keep the build context small and never ship host build artifacts or secrets.
+**/bin/
+**/obj/
+**/.vs/
+**/.vscode/
+**/.idea/
+
+# Secrets / local-only config (Failsafe rule = grade 0 if leaked)
+**/.env
+!**/.env.example
+**/appsettings.Development.json
+*.pem
+*.key
+
+# VCS / docs / IaC not needed inside the image
+.git/
+.gitignore
+**/*.md
+database/
+infra/

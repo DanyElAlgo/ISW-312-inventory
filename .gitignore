@@ -11,6 +11,24 @@
 **/.env
 !**/.env.example
 
+# Local dev settings hold the localhost connection string — never commit them.
+# Real secrets live in AWS Secrets Manager (cloud) or the gitignored .env (local).
+**/appsettings.Development.json
+
+# Cloud credentials / keys / IaC state — NEVER commit (Failsafe rule = grade 0).
+*.pem
+*.key
+.aws/
+**/*credentials*
+*.tfstate
+*.tfstate.*
+.terraform/
+*.tfvars
+!*.tfvars.example
+
+# SQL backups (clutter, not part of the schema)
+database/*_bak.sql
+
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/
